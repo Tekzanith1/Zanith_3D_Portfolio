@@ -12,16 +12,8 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 canvasContainer.appendChild(renderer.domElement);
 
 // --- LIGHTING ---
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
 scene.add(ambientLight);
-
-const pointLight = new THREE.PointLight(0x00ffff, 2, 100);
-pointLight.position.set(5, 5, 5);
-scene.add(pointLight);
-
-const pinkLight = new THREE.PointLight(0xff00ff, 2, 100);
-pinkLight.position.set(-5, 5, 5);
-scene.add(pinkLight);
 
 // --- STARFIELD ---
 const starsGeometry = new THREE.BufferGeometry();
@@ -29,90 +21,79 @@ const starsCount = 1500;
 const posArray = new Float32Array(starsCount * 3);
 for(let i = 0; i < starsCount * 3; i++) posArray[i] = (Math.random() - 0.5) * 100;
 starsGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-const starsMaterial = new THREE.PointsMaterial({ size: 0.05, color: 0xffffff, transparent: true, opacity: 0.8 });
-const starsMesh = new THREE.Points(starsGeometry, starsMaterial);
+const starsMesh = new THREE.Points(starsGeometry, new THREE.PointsMaterial({ size: 0.05, color: 0xffffff, transparent: true, opacity: 0.8 }));
 scene.add(starsMesh);
 
 // --- ARCADE MACHINE ---
 const arcadeGroup = new THREE.Group();
-const bodyGeometry = new THREE.BoxGeometry(4, 8, 3);
-const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.9, roughness: 0.1 });
-const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+const bodyMat = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.9, roughness: 0.1 });
+const body = new THREE.Mesh(new THREE.BoxGeometry(4, 8, 3), bodyMat);
 arcadeGroup.add(body);
-
-const screenGeometry = new THREE.PlaneGeometry(3.5, 3.5);
-const screenMaterial = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.DoubleSide });
-const screen = new THREE.Mesh(screenGeometry, screenMaterial);
-screen.position.set(0, 1.5, 1.51);
-arcadeGroup.add(screen);
-
-const controlGeometry = new THREE.BoxGeometry(4, 0.5, 1.5);
-const controlBase = new THREE.Mesh(controlGeometry, bodyMaterial);
-controlBase.position.set(0, -0.5, 2.25);
-arcadeGroup.add(controlBase);
-
-const stickGeometry = new THREE.SphereGeometry(0.2, 16, 16);
-const pinkMat = new THREE.MeshStandardMaterial({ color: 0xff00ff, emissive: 0xff00ff });
-const blueMat = new THREE.MeshStandardMaterial({ color: 0x00ffff, emissive: 0x00ffff });
-const stick1 = new THREE.Mesh(stickGeometry, pinkMat); stick1.position.set(-1, -0.2, 2.5); arcadeGroup.add(stick1);
-const stick2 = new THREE.Mesh(stickGeometry, blueMat); stick2.position.set(1, -0.2, 2.5); arcadeGroup.add(stick2);
-
+const screen = new THREE.Mesh(new THREE.PlaneGeometry(3.5, 3.5), new THREE.MeshBasicMaterial({ color: 0x000000 }));
+screen.position.set(0, 1.5, 1.51); arcadeGroup.add(screen);
+const ctrl = new THREE.Mesh(new THREE.BoxGeometry(4, 0.5, 1.5), bodyMat);
+ctrl.position.set(0, -0.5, 2.25); arcadeGroup.add(ctrl);
 scene.add(arcadeGroup);
-arcadeGroup.position.set(2, -1, 0);
-arcadeGroup.rotation.y = -0.4;
-
+arcadeGroup.position.set(2, -1, 0); arcadeGroup.rotation.y = -0.4;
 camera.position.z = 10;
 
-// --- PIXEL CHARACTERS ---
+// --- PIXEL PUPPET CHARACTERS ---
+const loader = new THREE.TextureLoader();
 const characters = [];
-const charNames = ['Naruto', 'Goku', 'Saitama', 'Itadori'];
-const charColors = [0xff9900, 0x0066ff, 0xffff00, 0xff0066];
+const charConfigs = [
+    { name: 'Naruto', color: 0xff9900, url: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png' },
+    { name: 'Goku', color: 0xff6600, url: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/4.png' },
+    { name: 'Saitama', color: 0xffff00, url: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/7.png' },
+    { name: 'Itadori', color: 0xff3366, url: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png' }
+];
 
-function createPixelTexture(color) {
-    const canvas = document.createElement('canvas');
-    canvas.width = 64; canvas.height = 64;
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#' + color.toString(16).padStart(6, '0');
-    // Draw simple pixelated body
-    ctx.fillRect(20, 10, 24, 24); // Head
-    ctx.fillRect(16, 34, 32, 20); // Body
-    ctx.fillRect(16, 54, 10, 10); ctx.fillRect(38, 54, 10, 10); // Feet
-    // Add "eyes"
-    ctx.fillStyle = '#fff'; ctx.fillRect(24, 16, 4, 4); ctx.fillRect(36, 16, 4, 4);
-    return new THREE.CanvasTexture(canvas);
+function createLimb(texture, color) {
+    const mat = new THREE.SpriteMaterial({ map: texture, color: color, transparent: true });
+    const sprite = new THREE.Sprite(mat);
+    sprite.center.set(0.5, 1); // Pivot at top
+    return sprite;
 }
 
-charNames.forEach((name, i) => {
-    const texture = createPixelTexture(charColors[i]);
+charConfigs.forEach((config, i) => {
+    const texture = loader.load(config.url);
     texture.magFilter = THREE.NearestFilter;
-    const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
-    const sprite = new THREE.Sprite(material);
-    sprite.scale.set(1.5, 1.5, 1);
-    sprite.position.set((Math.random() - 0.5) * 10, (Math.random() - 0.5) * 5, 2);
     
+    const group = new THREE.Group();
+    
+    // Main Body Sprite (Head/Torso)
+    const bodyMat = new THREE.SpriteMaterial({ map: texture, transparent: true });
+    const bodySprite = new THREE.Sprite(bodyMat);
+    bodySprite.scale.set(1.5, 1.5, 1);
+    group.add(bodySprite);
+    
+    // Limbs (Using slightly tinted versions of the sprite for clarity)
+    const lArm = createLimb(texture, 0xffffff); lArm.scale.set(0.6, 0.8, 1); lArm.position.set(-0.4, 0.2, -0.1);
+    const rArm = createLimb(texture, 0xdddddd); rArm.scale.set(0.6, 0.8, 1); rArm.position.set(0.4, 0.2, 0.1);
+    const lLeg = createLimb(texture, 0xcccccc); lLeg.scale.set(0.5, 0.8, 1); lLeg.position.set(-0.2, -0.4, -0.1);
+    const rLeg = createLimb(texture, 0xbbbbbb); rLeg.scale.set(0.5, 0.8, 1); rLeg.position.set(0.2, -0.4, 0.1);
+    
+    group.add(lArm, rArm, lLeg, rLeg);
+    group.position.set((Math.random() - 0.5) * 10, (Math.random() - 0.5) * 5, 2);
+    scene.add(group);
+
     characters.push({
-        name,
-        mesh: sprite,
-        target: null,
+        name: config.name,
+        group,
+        parts: { lArm, rArm, lLeg, rLeg, body: bodySprite },
         velocity: new THREE.Vector3(),
-        health: 100,
-        lastUpdate: 0,
-        frameRate: 1000 / 24 // 24 FPS
+        target: null,
+        animTimer: Math.random() * 10,
+        color: config.color
     });
-    scene.add(sprite);
 });
 
 // --- COMBAT LOGIC ---
 const weapons = [];
-function throwWeapon(from, to) {
-    const weaponGeom = new THREE.SphereGeometry(0.1, 8, 8);
-    const weaponMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    const weapon = new THREE.Mesh(weaponGeom, weaponMat);
+function throwWeapon(from, to, color) {
+    const weapon = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.2), new THREE.MeshBasicMaterial({ color: color }));
     weapon.position.copy(from);
     scene.add(weapon);
-    
-    const direction = new THREE.Vector3().subVectors(to, from).normalize();
-    weapons.push({ mesh: weapon, direction, speed: 0.2, life: 100 });
+    weapons.push({ mesh: weapon, dir: new THREE.Vector3().subVectors(to, from).normalize(), life: 60 });
 }
 
 // --- DATA FROM CV ---
@@ -128,18 +109,14 @@ let score = 0;
 
 function updateContent(section) {
     let html = `<h3>${section.toUpperCase()}</h3><ul class="nav-list-retro">`;
-    (cvData[section] || cvData.skills).forEach(item => {
-        html += `<li>> ${typeof item === 'string' ? item : item.title}</li>`;
-    });
+    (cvData[section] || cvData.skills).forEach(item => html += `<li>> ${typeof item === 'string' ? item : item.title}</li>`);
     html += '</ul>';
     gsap.to(dynamicContent, { opacity: 0, duration: 0.2, onComplete: () => {
         dynamicContent.innerHTML = html;
         gsap.to(dynamicContent, { opacity: 1, duration: 0.2 });
     }});
-    score += 1000;
-    scoreDisplay.innerText = score.toString().padStart(6, '0');
-    // Trigger "Battle" on click
-    characters.forEach(c => c.velocity.add(new THREE.Vector3((Math.random()-0.5)*2, (Math.random()-0.5)*2, 0)));
+    score += 1000; scoreDisplay.innerText = score.toString().padStart(6, '0');
+    characters.forEach(c => c.velocity.add(new THREE.Vector3((Math.random()-0.5)*12, (Math.random()-0.5)*12, 0)));
 }
 
 document.querySelectorAll('.nav-links a').forEach(link => {
@@ -160,52 +137,60 @@ let lastFrameTime = 0;
 const animate = (time) => {
     requestAnimationFrame(animate);
 
-    // 24 FPS Logic for Characters
-    if (time - lastFrameTime > 1000 / 24) {
+    if (time - lastFrameTime > 1000 / 24) { // 24 FPS Anime Style
         lastFrameTime = time;
 
         characters.forEach((char, i) => {
-            // Pick new target if none
             if (!char.target || Math.random() < 0.05) {
-                char.target = characters[(i + 1) % characters.length].mesh.position;
+                char.target = characters[(i + 1) % characters.length].group.position;
             }
 
-            // Move towards target
-            const dir = new THREE.Vector3().subVectors(char.target, char.mesh.position).normalize();
-            char.velocity.add(dir.multiplyScalar(0.01));
-            char.velocity.multiplyScalar(0.95); // Friction
-            char.mesh.position.add(char.velocity);
+            const dir = new THREE.Vector3().subVectors(char.target, char.group.position).normalize();
+            char.velocity.add(dir.multiplyScalar(0.03));
+            char.velocity.multiplyScalar(0.92);
+            char.group.position.add(char.velocity);
 
-            // Fighting: Throw "pixels" at each other
-            if (Math.random() < 0.1) {
-                throwWeapon(char.mesh.position, char.target);
-            }
+            // BOUNDARIES
+            if (Math.abs(char.group.position.x) > 12) char.velocity.x *= -1;
+            if (Math.abs(char.group.position.y) > 7) char.velocity.y *= -1;
 
-            // Bounce off boundaries
-            if (Math.abs(char.mesh.position.x) > 10) char.velocity.x *= -1;
-            if (Math.abs(char.mesh.position.y) > 6) char.velocity.y *= -1;
+            // --- PIXEL LIMB ANIMATION ---
+            char.animTimer += 0.5;
+            const walkSpeed = char.velocity.length() * 4;
             
-            // Subtle "jump" animation
-            char.mesh.position.y += Math.sin(time * 0.01) * 0.05;
+            // Swing legs
+            char.parts.lLeg.rotation.z = Math.sin(char.animTimer) * walkSpeed;
+            char.parts.rLeg.rotation.z = Math.sin(char.animTimer + Math.PI) * walkSpeed;
+            
+            // Swing arms
+            char.parts.lArm.rotation.z = Math.sin(char.animTimer + Math.PI) * walkSpeed;
+            char.parts.rArm.rotation.z = Math.sin(char.animTimer) * walkSpeed;
+
+            // Combat Action
+            if (Math.random() < 0.15) {
+                throwWeapon(char.group.position, char.target, char.color);
+                gsap.to(char.parts.rArm.rotation, { z: -2, duration: 0.1, yoyo: true, repeat: 1 });
+            }
+
+            // Face movement direction
+            char.group.scale.x = char.velocity.x > 0 ? 1 : -1;
+            
+            // Subtle "breathing" scale
+            char.parts.body.scale.y = 1.5 + Math.sin(time * 0.01) * 0.05;
         });
 
-        // Update Weapons
         for (let i = weapons.length - 1; i >= 0; i--) {
             const w = weapons[i];
-            w.mesh.position.add(w.direction.clone().multiplyScalar(w.speed));
+            w.mesh.position.add(w.dir.clone().multiplyScalar(0.5));
+            w.mesh.rotation.x += 0.4;
             w.life--;
-            if (w.life <= 0) {
-                scene.remove(w.mesh);
-                weapons.splice(i, 1);
-            }
+            if (w.life <= 0) { scene.remove(w.mesh); weapons.splice(i, 1); }
         }
     }
 
-    // Smooth background & arcade effects (at 60fps for smoothness)
     starsMesh.rotation.y += 0.001;
     gsap.to(arcadeGroup.rotation, { y: -0.4 + mouseX * 0.2, x: mouseY * 0.1, duration: 2 });
     gsap.to(camera.position, { x: mouseX * 0.5, y: -mouseY * 0.5, duration: 2 });
-
     renderer.render(scene, camera);
 };
 

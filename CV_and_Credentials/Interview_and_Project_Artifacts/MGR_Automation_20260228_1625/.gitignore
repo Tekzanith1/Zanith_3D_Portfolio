@@ -1,0 +1,8 @@
+__pycache__/
+.pytest_cache/
+.env
+*.log
+master_failure.png
+archive/
+Automation_code_latest_date/
+msedgedriver.exe

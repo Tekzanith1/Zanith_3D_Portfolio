@@ -1,0 +1,1771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#EDEAE3">
+  <title>Tek Zanith — Senior QA Automation Engineer & AI Test Architect</title>
+  <meta name="description" content="Tek Zanith is a Senior QA Automation Engineer and AI Test Architect in Phnom Penh, Cambodia, architecting autonomous multi-agent test swarms, E2E Playwright and Maestro automation, and zero-leak security pipelines.">
+
+  <!-- Google Fonts: Montserrat & Space Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #EDEAE3;       /* Warm linen canvas */
+      --ink: #2A4A44;           /* Deep forest ink */
+      --ink-dim: rgba(42, 74, 68, 0.7);
+      --muted: #5C736F;         /* Muted slate text */
+      --hint: #7A918D;          /* Tracking label hint */
+      --sage: #DCE8E5;          /* Sage pastel */
+      --sage-text: #2A4A44;
+      --blush: #F2E3DF;         /* Warm blush rose */
+      --blush-text: #5A3830;
+      --butter: #F7F2DE;        /* Pale butter accent */
+      --butter-text: #4A4325;
+      --sky: #DCEBF8;           /* Pale sky blue */
+      --sky-text: #203A4E;
+      --lavender: #E8E2F2;      /* Pale lavender */
+      --lavender-text: #3C2D54;
+      --border-ink: 2px solid #2A4A44;
+      --font-main: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'Space Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      background-color: var(--primary);
+      color: var(--ink);
+      font-family: var(--font-main);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Top simulated NProgress bar */
+    #progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 0%;
+      height: 3px;
+      background: var(--ink);
+      z-index: 9999;
+      transition: width 0.3s ease, opacity 0.3s ease;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Outer Viewport Frame */
+    .app-frame-outer {
+      width: 100vw;
+      height: 100vh;
+      padding: 12px;
+      display: flex;
+    }
+
+    @media (min-width: 640px) {
+      .app-frame-outer {
+        padding: 16px;
+      }
+    }
+
+    /* Inner Framed Container */
+    .app-frame-inner {
+      width: 100%;
+      height: 100%;
+      background: var(--primary);
+      border: var(--border-ink);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Top Navigation Bar */
+    .site-nav {
+      height: 54px;
+      min-height: 54px;
+      border-bottom: var(--border-ink);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+      background: var(--primary);
+      z-index: 50;
+    }
+
+    .nav-brand {
+      font-weight: 700;
+      font-size: 13.5px;
+      color: var(--ink);
+      text-decoration: none;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-brand:hover {
+      opacity: 0.85;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      list-style: none;
+    }
+
+    .nav-item-btn {
+      background: none;
+      border: none;
+      font-family: var(--font-main);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      text-decoration: none;
+      transition: color 0.2s ease;
+      letter-spacing: 0.02em;
+    }
+
+    .nav-item-btn:hover, .nav-item-btn.active {
+      color: var(--ink);
+    }
+
+    .nav-item-btn.active {
+      text-decoration: underline;
+      text-underline-offset: 4px;
+      text-decoration-thickness: 2px;
+    }
+
+    /* Main Scrollable View Area */
+    .main-viewport {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      width: 100%;
+      height: calc(100% - 54px);
+    }
+
+    .tab-view {
+      display: none;
+      min-height: 100%;
+      animation: fadeIn 0.25s ease-out forwards;
+    }
+
+    .tab-view.active-tab {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(3px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ========================================================
+       1. HOME VIEW (Matches Nel's Hero)
+       ======================================================== */
+    .home-hero-wrap {
+      min-height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+    }
+
+    .home-hero-content {
+      width: 100%;
+      max-width: 580px;
+    }
+
+    .eyebrow-tracking {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--hint);
+      margin-bottom: 10px;
+    }
+
+    .hero-name-heading {
+      font-size: clamp(32px, 5.5vw, 50px);
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1.1;
+      letter-spacing: -0.01em;
+      margin-bottom: 14px;
+    }
+
+    .hero-tagline-text {
+      font-size: 16px;
+      line-height: 1.65;
+      color: var(--muted);
+      max-width: 500px;
+      margin-bottom: 32px;
+      letter-spacing: 0.01em;
+    }
+
+    /* 2 Large Neubrutalist Cards (Work / Info) */
+    .home-cards-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    @media (min-width: 540px) {
+      .home-cards-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .neubrutalist-card-btn {
+      position: relative;
+      display: block;
+      text-decoration: none;
+      cursor: pointer;
+      background: none;
+      border: none;
+      text-align: left;
+      width: 100%;
+    }
+
+    .card-shadow {
+      position: absolute;
+      inset: 0;
+      background: var(--ink);
+      transform: translate(4px, 4px);
+      opacity: 0;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      z-index: 1;
+    }
+
+    .card-front {
+      position: relative;
+      z-index: 2;
+      border: var(--border-ink);
+      padding: 22px 20px;
+      transition: transform 0.25s ease;
+    }
+
+    .neubrutalist-card-btn:hover .card-front {
+      transform: translate(-3px, -3px);
+    }
+
+    .neubrutalist-card-btn:hover .card-shadow {
+      opacity: 1;
+      transform: translate(3px, 3px);
+    }
+
+    .card-category-label {
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 6px;
+    }
+
+    .card-action-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--ink);
+      letter-spacing: -0.01em;
+    }
+
+    .home-footer-strip {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 12.5px;
+      color: var(--muted);
+      padding-top: 10px;
+      border-top: 1px dashed rgba(42, 74, 68, 0.2);
+    }
+
+    .home-footer-strip a {
+      color: var(--ink);
+      font-weight: 600;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    /* ========================================================
+       2. PROJECTS VIEW (Filterable Grid)
+       ======================================================== */
+    .page-inner-container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 40px 24px 60px 24px;
+    }
+
+    .page-header-block {
+      margin-bottom: 28px;
+    }
+
+    .page-title {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 8px;
+      letter-spacing: -0.01em;
+    }
+
+    .page-desc {
+      font-size: 14.5px;
+      color: var(--muted);
+      line-height: 1.6;
+      max-width: 640px;
+    }
+
+    /* Filter Tabs */
+    .filter-tabs-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 30px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(42, 74, 68, 0.15);
+    }
+
+    .filter-pill {
+      background: none;
+      border: 1px solid var(--ink);
+      padding: 5px 12px;
+      font-family: var(--font-main);
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--ink);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      letter-spacing: 0.02em;
+    }
+
+    .filter-pill:hover, .filter-pill.active {
+      background: var(--ink);
+      color: var(--primary);
+    }
+
+    /* Project Cards Grid */
+    .projects-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    @media (min-width: 700px) {
+      .projects-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .project-card-wrap {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+    }
+
+    .project-card-front {
+      position: relative;
+      z-index: 2;
+      border: var(--border-ink);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      transition: transform 0.25s ease;
+    }
+
+    .project-card-wrap:hover .project-card-front {
+      transform: translate(-3px, -3px);
+    }
+
+    .project-card-wrap:hover .card-shadow {
+      opacity: 1;
+      transform: translate(3px, 3px);
+    }
+
+    .project-card-body {
+      padding: 20px 20px 18px 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .project-cat-tag {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      opacity: 0.75;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .project-card-text {
+      font-size: 13px;
+      line-height: 1.62;
+      margin-bottom: 16px;
+      opacity: 0.92;
+    }
+
+    .project-tags-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      list-style: none;
+      margin-top: auto;
+    }
+
+    .project-tag-pill {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border: 1px solid currentColor;
+      opacity: 0.85;
+      letter-spacing: 0.02em;
+    }
+
+    .project-card-footer {
+      border-top: var(--border-ink);
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+
+    /* ========================================================
+       3. ABOUT VIEW (Full Bio, Taxonomy & Experience)
+       ======================================================== */
+    .about-top-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 12.5px;
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(42, 74, 68, 0.15);
+    }
+
+    .about-top-bar a {
+      color: var(--ink);
+      font-weight: 600;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .about-lead-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--hint);
+      margin-bottom: 6px;
+    }
+
+    .about-main-name {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 16px;
+      letter-spacing: -0.01em;
+    }
+
+    .about-bio-prose {
+      font-size: 14.5px;
+      line-height: 1.75;
+      color: var(--ink);
+      margin-bottom: 36px;
+      max-width: 780px;
+    }
+
+    .about-bio-prose p {
+      margin-bottom: 16px;
+    }
+
+    /* SKILLS TAXONOMY GRID */
+    .taxonomy-section {
+      margin-bottom: 40px;
+      border-top: var(--border-ink);
+      padding-top: 24px;
+    }
+
+    .taxonomy-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      margin-top: 16px;
+    }
+
+    @media (min-width: 640px) {
+      .taxonomy-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .taxonomy-card {
+      background: var(--sage);
+      border: var(--border-ink);
+      padding: 18px 20px;
+    }
+
+    .taxonomy-card.blush-bg {
+      background: var(--blush);
+    }
+
+    .taxonomy-card.butter-bg {
+      background: var(--butter);
+    }
+
+    .taxonomy-card.sky-bg {
+      background: var(--sky);
+    }
+
+    .taxonomy-heading {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--ink);
+      margin-bottom: 10px;
+      border-bottom: 1px solid rgba(42, 74, 68, 0.2);
+      padding-bottom: 4px;
+    }
+
+    .taxonomy-list {
+      list-style: none;
+      font-size: 12.5px;
+      line-height: 1.65;
+      color: var(--ink);
+    }
+
+    .taxonomy-list li {
+      margin-bottom: 4px;
+    }
+
+    /* CAREER TIMELINE ACCORDION / LIST */
+    .career-section {
+      border-top: var(--border-ink);
+      padding-top: 28px;
+      margin-bottom: 40px;
+    }
+
+    .career-item {
+      border: var(--border-ink);
+      background: var(--primary);
+      margin-bottom: 16px;
+    }
+
+    .career-item-header {
+      padding: 16px 20px;
+      background: var(--sage);
+      border-bottom: var(--border-ink);
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .career-role-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .career-company-name {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .career-dates {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      background: var(--primary);
+      border: 1px solid var(--ink);
+      padding: 2px 7px;
+    }
+
+    .career-item-body {
+      padding: 18px 20px;
+    }
+
+    .career-bullets {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .career-bullets li {
+      position: relative;
+      padding-left: 18px;
+      font-size: 13px;
+      line-height: 1.65;
+      color: var(--ink);
+    }
+
+    .career-bullets li::before {
+      content: "•";
+      position: absolute;
+      left: 2px;
+      top: -1px;
+      color: var(--ink);
+      font-size: 14px;
+    }
+
+    /* MODAL DRAWER FOR PROJECT DETAILS */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(42, 74, 68, 0.45);
+      backdrop-filter: blur(4px);
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-box {
+      background: var(--primary);
+      border: var(--border-ink);
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 8px 8px 0 var(--ink);
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      animation: modalPop 0.25s ease-out;
+    }
+
+    @keyframes modalPop {
+      from { transform: scale(0.96); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-header {
+      padding: 14px 20px;
+      border-bottom: var(--border-ink);
+      background: var(--sage);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .modal-close-btn {
+      background: none;
+      border: none;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--ink);
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .modal-body {
+      padding: 24px 20px;
+      overflow-y: auto;
+      font-size: 13.5px;
+      line-height: 1.7;
+    }
+
+    /* RESUME VIEW */
+    .resume-view-wrap {
+      padding: 30px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+    }
+
+    .resume-actions-bar {
+      width: 100%;
+      max-width: 800px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: var(--border-ink);
+    }
+
+    .resume-iframe {
+      width: 100%;
+      max-width: 800px;
+      flex: 1;
+      min-height: 600px;
+      border: var(--border-ink);
+      box-shadow: 4px 4px 0 var(--ink);
+      background: white;
+    }
+  
+    /* API EXPLORER & NEUBRUTALIST FORM STYLES */
+    .api-card-box {
+      border: var(--border-ink);
+      background: var(--primary);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .api-endpoint-badge {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      background: var(--ink);
+      color: var(--primary);
+      padding: 3px 8px;
+      margin-right: 8px;
+    }
+    .api-code-block {
+      background: #1c2a27;
+      color: #7ee787;
+      border: var(--border-ink);
+      padding: 16px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.6;
+      overflow-x: auto;
+      max-height: 380px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin-top: 12px;
+    }
+    .endpoint-btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .endpoint-pill-btn {
+      background: var(--sage);
+      border: 1.5px solid var(--ink);
+      padding: 6px 12px;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--ink);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .endpoint-pill-btn:hover, .endpoint-pill-btn.active {
+      background: var(--ink);
+      color: var(--primary);
+    }
+    .brutalist-input {
+      width: 100%;
+      background: #F8F6F0;
+      border: var(--border-ink);
+      padding: 10px 14px;
+      font-family: var(--font-main);
+      font-size: 13px;
+      color: var(--ink);
+      margin-bottom: 12px;
+      outline: none;
+    }
+    .brutalist-input:focus {
+      background: #ffffff;
+      box-shadow: 2px 2px 0 var(--ink);
+    }
+    .brutalist-submit-btn {
+      background: var(--ink);
+      color: var(--primary);
+      border: var(--border-ink);
+      padding: 10px 20px;
+      font-family: var(--font-main);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .brutalist-submit-btn:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 3px 3px 0 #000;
+    }
+  
+    /* API ACTIVITY MONITOR HUD */
+    .api-hud {
+      position: fixed;
+      bottom: 22px;
+      right: 26px;
+      z-index: 1000;
+      background: var(--ink);
+      color: var(--primary);
+      border: 1.5px solid var(--primary);
+      padding: 6px 14px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 3px 3px 0 rgba(0,0,0,0.35);
+      border-radius: 4px;
+      transition: all 0.25s ease;
+      pointer-events: none;
+    }
+    .hud-indicator {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #34d399;
+      box-shadow: 0 0 8px #34d399;
+      flex-shrink: 0;
+    }
+    .hud-indicator.busy {
+      background: #fbbf24;
+      box-shadow: 0 0 8px #fbbf24;
+      animation: pulse 1s infinite;
+    }
+    .hud-latency {
+      opacity: 0.75;
+      font-size: 10px;
+      margin-left: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top NProgress Bar -->
+  <div id="progress-bar"></div>
+
+  <!-- Outer Window Frame -->
+  <div class="app-frame-outer">
+    <div class="app-frame-inner">
+
+      <!-- Navigation Header -->
+      <nav class="site-nav">
+        <a href="#home" class="nav-brand" onclick="navigate('home')">
+          <span>TEK ZANITH</span>
+        </a>
+        <ul class="nav-links">
+          <li><button class="nav-item-btn" id="nav-btn-home" onclick="navigate('home')">Home</button></li>
+          <li><button class="nav-item-btn" id="nav-btn-projects" onclick="navigate('projects')">Projects</button></li>
+          <li><button class="nav-item-btn" id="nav-btn-about" onclick="navigate('about')">About</button></li>
+          <li><button class="nav-item-btn" id="nav-btn-api" onclick="navigate('api')">API</button></li>
+          <li><button class="nav-item-btn" id="nav-btn-resume" onclick="navigate('resume')">Resume</button></li>
+        </ul>
+      </nav>
+
+      <!-- Main Viewport Router -->
+      <main class="main-viewport">
+
+        <!-- ========================================================
+             VIEW 1: HOME VIEW
+             ======================================================== -->
+        <section id="view-home" class="tab-view active-tab">
+          <div class="home-hero-wrap">
+            <div class="home-hero-content">
+              <p class="eyebrow-tracking">Senior QA Automation Engineer | AI Test Architect · Phnom Penh, Cambodia</p>
+              <h1 class="hero-name-heading">Tek Zanith</h1>
+              <p class="hero-tagline-text">
+                I architect autonomous multi-agent test swarms, E2E mobile and web automation, and zero-leak Row Level Security release pipelines.
+              </p>
+
+              <!-- 2 Large Neubrutalist Cards (Work & Info) -->
+              <div class="home-cards-grid">
+                <!-- WORK / PROJECTS -->
+                <a href="#projects" class="neubrutalist-card-btn" onclick="navigate('projects'); return false;">
+                  <div class="card-shadow"></div>
+                  <div class="card-front" style="background: var(--sage); color: var(--sage-text);">
+                    <p class="card-category-label">Work</p>
+                    <p class="card-action-title">Projects →</p>
+                  </div>
+                </a>
+
+                <!-- INFO / ABOUT -->
+                <a href="#about" class="neubrutalist-card-btn" onclick="navigate('about'); return false;">
+                  <div class="card-shadow"></div>
+                  <div class="card-front" style="background: var(--blush); color: var(--blush-text);">
+                    <p class="card-category-label">Info</p>
+                    <p class="card-action-title">About →</p>
+                  </div>
+                </a>
+
+              <!-- Quick Contact Strip -->
+              <div class="home-footer-strip">
+                <div>Get in touch — <a href="mailto:Tekzanith@gmail.com">Tekzanith@gmail.com</a> · <a href="tel:+85585930693">+855 85930693</a></div>
+                <div>Resume — <a href="#resume" onclick="navigate('resume')">view online</a> or <a href="TekZanith_CV_Updated.pdf" download>download PDF</a></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================================
+             VIEW 2: PROJECTS VIEW
+             ======================================================== -->
+        <section id="view-projects" class="tab-view">
+          <div class="page-inner-container">
+            <div class="page-header-block">
+              <h1 class="page-title">Projects</h1>
+              <p class="page-desc">
+                6 selected production platforms, autonomous multi-agent test swarms, and cross-platform mobile automation fleets.
+              </p>
+            </div>
+
+            <!-- Filter Tabs -->
+            <div class="filter-tabs-bar">
+              <button class="filter-pill active" onclick="filterProjects('all', this)">All (6)</button>
+              <button class="filter-pill" onclick="filterProjects('professional', this)">Professional (4)</button>
+              <button class="filter-pill" onclick="filterProjects('ai', this)">AI & Automation (2)</button>
+              <button class="filter-pill" onclick="filterProjects('mobile', this)">Mobile Native (2)</button>
+              <button class="filter-pill" onclick="filterProjects('fintech', this)">Security & Fintech (2)</button>
+            </div>
+
+            <!-- Projects Grid -->
+            <div class="projects-grid" id="projects-grid">
+
+              <!-- CARD 1 -->
+              <div class="project-card-wrap" data-cat="professional ai" onclick="openModal('project-1')">
+                <div class="card-shadow"></div>
+                <div class="project-card-front" style="background: var(--sage); color: var(--sage-text);">
+                  <div class="project-card-body">
+                    <div>
+                      <span class="project-cat-tag">Professional · AI Architecture</span>
+                      <p class="project-card-text">
+                        Architected an autonomous 3-agent testing swarm (API/RLS, Webhooks, UI/DOM) executing parallel regression across multi-role hierarchies, cutting full test cycles by 65%.
+                      </p>
+                    </div>
+                    <ul class="project-tags-list">
+                      <li class="project-tag-pill">Playwright</li>
+                      <li class="project-tag-pill">Supabase RLS</li>
+                      <li class="project-tag-pill">Multi-Agent Swarm</li>
+                      <li class="project-tag-pill">WebSockets</li>
+                    </ul>
+                  </div>
+                  <div class="project-card-footer" style="background: var(--sage);">
+                    <span>Enterprise Multi-Tenant B2B SaaS Platform</span>
+                    <span>→</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CARD 2 -->
+              <div class="project-card-wrap" data-cat="professional mobile" onclick="openModal('project-2')">
+                <div class="card-shadow"></div>
+                <div class="project-card-front" style="background: var(--sky); color: var(--sky-text);">
+                  <div class="project-card-body">
+                    <div>
+                      <span class="project-cat-tag">Professional · Mobile Native</span>
+                      <p class="project-card-text">
+                        Automated mobile user journeys across 5 extreme device form factors (Foldable, compact Android, and flagship iOS/Android). Diagnosed front-end defects down to AST component code.
+                      </p>
+                    </div>
+                    <ul class="project-tags-list">
+                      <li class="project-tag-pill">React Native</li>
+                      <li class="project-tag-pill">Expo</li>
+                      <li class="project-tag-pill">Maestro CLI</li>
+                      <li class="project-tag-pill">Pixel Fold</li>
+                    </ul>
+                  </div>
+                  <div class="project-card-footer" style="background: var(--sky);">
+                    <span>Cross-Platform Mobile Native Application</span>
+                    <span>→</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CARD 3 -->
+              <div class="project-card-wrap" data-cat="professional fintech" onclick="openModal('project-3')">
+                <div class="card-shadow"></div>
+                <div class="project-card-front" style="background: var(--blush); color: var(--blush-text);">
+                  <div class="project-card-body">
+                    <div>
+                      <span class="project-cat-tag">Professional · E-Government</span>
+                      <p class="project-card-text">
+                        Sole QA Lead establishing foundational testing standards, SOPs, and defect classification for national public services. Executed JMeter stress testing ensuring 0% critical escapes.
+                      </p>
+                    </div>
+                    <ul class="project-tags-list">
+                      <li class="project-tag-pill">Apache JMeter</li>
+                      <li class="project-tag-pill">Postman API</li>
+                      <li class="project-tag-pill">Stress Testing</li>
+                      <li class="project-tag-pill">Agile Lead</li>
+                    </ul>
+                  </div>
+                  <div class="project-card-footer" style="background: var(--blush);">
+                    <span>National E-Government Platform & QA Infrastructure</span>
+                    <span>→</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CARD 4 -->
+              <div class="project-card-wrap" data-cat="ai" onclick="openModal('project-4')">
+                <div class="card-shadow"></div>
+                <div class="project-card-front" style="background: var(--butter); color: var(--butter-text);">
+                  <div class="project-card-body">
+                    <div>
+                      <span class="project-cat-tag">AI Engineering · Testing Harness</span>
+                      <p class="project-card-text">
+                        Production model-routing test harness pairing Claude Opus (UI state), Claude Sonnet (screen ports), and OpenAI Codex (backend DB & concurrency tests) with cross-model peer review.
+                      </p>
+                    </div>
+                    <ul class="project-tags-list">
+                      <li class="project-tag-pill">Model Routing</li>
+                      <li class="project-tag-pill">Claude Opus</li>
+                      <li class="project-tag-pill">Codex Sol</li>
+                      <li class="project-tag-pill">Prompt Engineering</li>
+                    </ul>
+                  </div>
+                  <div class="project-card-footer" style="background: var(--butter);">
+                    <span>Multi-Agent Swarm & Model-Routing Harness</span>
+                    <span>→</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CARD 5 -->
+              <div class="project-card-wrap" data-cat="professional fintech" onclick="openModal('project-5')">
+                <div class="card-shadow"></div>
+                <div class="project-card-front" style="background: var(--lavender); color: var(--lavender-text);">
+                  <div class="project-card-body">
+                    <div>
+                      <span class="project-cat-tag">Professional · Fintech & Concurrency</span>
+                      <p class="project-card-text">
+                        Executed Production Verification Testing (PVT) and load benchmarks under peak concurrency, validating OAuth/SSO login matrices and zero-drop transactional integrity.
+                      </p>
+                    </div>
+                    <ul class="project-tags-list">
+                      <li class="project-tag-pill">Locust</li>
+                      <li class="project-tag-pill">OAuth / SSO</li>
+                      <li class="project-tag-pill">JMeter</li>
+                      <li class="project-tag-pill">PVT Testing</li>
+                    </ul>
+                  </div>
+                  <div class="project-card-footer" style="background: var(--lavender);">
+                    <span>High-Concurrency Booking Engines & Tier-1 Banking SSO</span>
+                    <span>→</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CARD 6 -->
+              <div class="project-card-wrap" data-cat="professional mobile" onclick="openModal('project-6')">
+                <div class="card-shadow"></div>
+                <div class="project-card-front" style="background: var(--sage); color: var(--sage-text);">
+                  <div class="project-card-body">
+                    <div>
+                      <span class="project-cat-tag">Computer Vision · Mobile SDK</span>
+                      <p class="project-card-text">
+                        Led quality engineering and CI/CD pipeline automation for AI computer vision attendance, license plate recognition, and international client mobile SDKs.
+                      </p>
+                    </div>
+                    <ul class="project-tags-list">
+                      <li class="project-tag-pill">Computer Vision</li>
+                      <li class="project-tag-pill">GitLab CI/CD</li>
+                      <li class="project-tag-pill">Jenkins</li>
+                      <li class="project-tag-pill">Mobile SDK</li>
+                    </ul>
+                  </div>
+                  <div class="project-card-footer" style="background: var(--sage);">
+                    <span>Computer Vision & License Plate Recognition Systems</span>
+                    <span>→</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================================
+             VIEW 3: ABOUT VIEW (Bio, Taxonomy & Career)
+             ======================================================== -->
+        <section id="view-about" class="tab-view">
+          <div class="page-inner-container">
+
+            <div class="about-top-bar">
+              <a href="#resume" onclick="navigate('resume')">Resume (PDF)</a>
+              <a href="https://github.com/Tekzanith1" target="_blank">Github</a>
+              <a href="mailto:Tekzanith@gmail.com">Tekzanith@gmail.com</a>
+              <span>+855 85930693</span>
+            </div>
+
+            <p class="about-lead-title">Senior QA Automation Engineer · AI & Test Architecture Lead</p>
+            <h1 class="about-main-name">Tek Zanith · Phnom Penh, Cambodia</h1>
+
+            <div class="about-bio-prose">
+              <p>
+                I am an AI-native Quality Assurance Engineer and Test Architect with 4+ years of experience leading end-to-end quality engineering across distributed web, mobile native, and enterprise platforms.
+              </p>
+              <p>
+                Rather than treating QA as passive manual ticket execution, I build resilient, automated verification architectures. My work focuses on <strong>autonomous multi-agent test swarms</strong>, <strong>cross-platform mobile native automation (Maestro CLI / React Native)</strong>, and <strong>database-level Row Level Security (RLS) enforcement</strong> that stops authorization and financial data leaks before code reaches production.
+              </p>
+              <p>
+                Currently at Skai Technology, I lead test architecture across multi-tenant SaaS platforms, extreme device fleet validation (foldables, compacts, and flagships), and high-concurrency commercial banking SSO integrations. Previously, I was the sole QA Lead at Cambodia's Digital Economy and Business Committee, establishing national e-government QA standards and performance benchmarks.
+              </p>
+            </div>
+
+            <!-- SKILLS TAXONOMY GRID -->
+            <div class="taxonomy-section">
+              <h2 style="font-size: 20px; font-weight: 700; color: var(--ink); margin-bottom: 8px;">Technical Taxonomy</h2>
+              <p style="font-size: 13.5px; color: var(--muted); margin-bottom: 20px;">Categorized by practical operational depth.</p>
+
+              <div class="taxonomy-grid">
+                <div class="taxonomy-card">
+                  <h3 class="taxonomy-heading">Core Automation & Methodologies</h3>
+                  <ul class="taxonomy-list">
+                    <li><strong>Playwright Automation:</strong> Web UI & API end-to-end regression</li>
+                    <li><strong>Maestro CLI:</strong> Mobile native automated user journeys</li>
+                    <li><strong>Selenium WebDriver (Python / C#):</strong> Automated testing</li>
+                    <li><strong>Postman:</strong> REST API contract & JSON schema validation</li>
+                    <li><strong>Bun Test Runner:</strong> Unit and API integration flows</li>
+                  </ul>
+                </div>
+
+                <div class="taxonomy-card blush-bg">
+                  <h3 class="taxonomy-heading">AI & Agentic Orchestration</h3>
+                  <ul class="taxonomy-list">
+                    <li><strong>Multi-Agent Specialist Swarms:</strong> Parallel API, Webhook, and UI checks</li>
+                    <li><strong>Model Routing Protocols:</strong> Task delegation to Claude Opus, Sonnet, and Codex</li>
+                    <li><strong>Prompt Engineering:</strong> Deterministic synthetic test data and edge cases</li>
+                    <li><strong>AST-Level Code Isolation:</strong> Root-cause layout and race condition debugging</li>
+                  </ul>
+                </div>
+
+                <div class="taxonomy-card sky-bg">
+                  <h3 class="taxonomy-heading">Mobile Native & Form Factors</h3>
+                  <ul class="taxonomy-list">
+                    <li><strong>React Native & Expo SDK:</strong> Component tree diagnostics</li>
+                    <li><strong>Foldable Certification:</strong> Pixel Fold responsive dual-screen testing</li>
+                    <li><strong>Form-Factor Extremes:</strong> Compact Android (720x1280) to iPhone 17 Pro Max</li>
+                    <li><strong>Emulators & Simulators:</strong> Android API 36/37 and iOS 26+ Simulators</li>
+                  </ul>
+                </div>
+
+                <div class="taxonomy-card butter-bg">
+                  <h3 class="taxonomy-heading">Backend, Security & Concurrency</h3>
+                  <ul class="taxonomy-list">
+                    <li><strong>Supabase Row Level Security (RLS):</strong> Cross-tenant isolation</li>
+                    <li><strong>Apache JMeter & Locust:</strong> Peak concurrency load testing</li>
+                    <li><strong>WebSockets & Webhooks:</strong> Event replay and latency testing (&lt;3s)</li>
+                    <li><strong>Enterprise SSO:</strong> OAuth 2.0 banking authentication matrices</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <!-- CAREER TIMELINE -->
+            <div class="career-section">
+              <h2 style="font-size: 20px; font-weight: 700; color: var(--ink); margin-bottom: 20px;">Experience Timeline</h2>
+
+              <!-- ROLE 1 -->
+              <div class="career-item">
+                <div class="career-item-header">
+                  <div>
+                    <span class="career-role-title">Senior QA Automation Engineer & AI Test Architect</span> · 
+                    <span class="career-company-name">Skai Technology</span>
+                  </div>
+                  <span class="career-dates">06/2026 — PRESENT</span>
+                </div>
+                <div class="career-item-body">
+                  <ul class="career-bullets">
+                    <li>Architected an autonomous 3-agent testing swarm (API/Security, Realtime/Webhooks, UI/Workflow) running parallel validation across multi-tenant B2B SaaS platforms, cutting regression cycles by 65%.</li>
+                    <li>Eliminated cross-tenant authorization vulnerabilities by designing validation suites for Supabase Row Level Security (RLS) and additive role pyramids, guaranteeing 100% financial and billing data isolation.</li>
+                    <li>Automated 52 critical live-data user journeys in Playwright with a 100% pass rate, embedding 98 automated visual assertions and verifying real-time WebSocket sync latencies under 3 seconds.</li>
+                    <li>Engineered cross-platform mobile test architecture for React Native/Expo apps across 5 extreme device profiles (foldable viewports, compact Android, and flagship iOS/Android), resolving responsive coordinate clipping before production releases.</li>
+                    <li>Implemented Maestro CLI automation reducing smoke test runs from 4 hours to 18 minutes, and diagnosed defects down to the AST and component source code level to accelerate developer fix velocity.</li>
+                    <li>Executed Locust and JMeter load benchmarks under high-concurrency SSO traffic, and engineered zero-dependency HTML audit reports with inline Base64 proofs for client and executive sign-off.</li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- ROLE 2 -->
+              <div class="career-item">
+                <div class="career-item-header">
+                  <div>
+                    <span class="career-role-title">Quality Assurance Engineer (Sole QA Lead)</span> · 
+                    <span class="career-company-name">Digital Economy and Business Committee</span>
+                  </div>
+                  <span class="career-dates">05/2024 — 01/2026</span>
+                </div>
+                <div class="career-item-body">
+                  <ul class="career-bullets">
+                    <li>Established the organization’s foundational QA infrastructure, authoring Standard Operating Procedures (SOPs), bug classification matrices, and release sign-off gates adopted across all engineering teams.</li>
+                    <li>Identified concurrency bottlenecks prior to public rollouts by engineering high-volume stress and load testing suites in Apache JMeter, ensuring server stability under heavy public traffic spikes.</li>
+                    <li>Accelerated test suite authoring by 50% by designing prompt-engineering pipelines with Claude and ChatGPT to synthesize complex test matrices, edge-case permutations, and API payloads.</li>
+                    <li>Maintained a 0% critical bug escape rate across production releases through rigorous manual, API, and cross-browser regression gates.</li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- ROLE 3 -->
+              <div class="career-item">
+                <div class="career-item-header">
+                  <div>
+                    <span class="career-role-title">Quality Assurance Engineer</span> · 
+                    <span class="career-company-name">Infinity Information and App Dev</span>
+                  </div>
+                  <span class="career-dates">01/2024 — 04/2024</span>
+                </div>
+                <div class="career-item-body">
+                  <ul class="career-bullets">
+                    <li>Prevented contract-breaking API changes by building comprehensive Postman test collections, validating JSON schemas, status codes, and latency across all backend services.</li>
+                    <li>Authored 200+ detailed, reusable test cases covering positive, negative, boundary, and edge-case scenarios accessible to both technical and client stakeholders.</li>
+                    <li>Shortened defect triage lifecycles by 30% by submitting reproducible defect reports containing network logs, payload dumps, and environmental parameters.</li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- ROLE 4 -->
+              <div class="career-item">
+                <div class="career-item-header">
+                  <div>
+                    <span class="career-role-title">Quality Assurance Engineer</span> · 
+                    <span class="career-company-name">Techbodia</span>
+                  </div>
+                  <span class="career-dates">03/2022 — 09/2022</span>
+                </div>
+                <div class="career-item-body">
+                  <ul class="career-bullets">
+                    <li>Automated repetitive regression testing by implementing Selenium WebDriver (Python) and Playwright automation frameworks, cutting manual testing effort by 40%.</li>
+                    <li>Benchmarked system response boundaries using Apache JMeter, identifying database connection pool exhaustion and memory leaks under simulated load conditions.</li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- ROLE 5 -->
+              <div class="career-item">
+                <div class="career-item-header">
+                  <div>
+                    <span class="career-role-title">QA Engineer / Project Lead</span> · 
+                    <span class="career-company-name">Kirirom Institute of Technology</span>
+                  </div>
+                  <span class="career-dates">02/2022 — 10/2022</span>
+                </div>
+                <div class="career-item-body">
+                  <ul class="career-bullets">
+                    <li>Led QA verification for mission-critical computer vision platforms, including Face Recognition Attendance Systems, License Plate Recognition (LPR) platforms, and client-facing Mobile SDKs.</li>
+                    <li>Built automated CI/CD quality gates using GitLab CI/CD, Jenkins, and Google Cloud Platform (GCP), preventing broken builds from progressing to staging.</li>
+                    <li>Reported weekly milestone velocity directly to the CTO, translating technical defect metrics into clear risk assessments and release decisions.</li>
+                  </ul>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- EDUCATION & HONORS -->
+            <div style="border-top: var(--border-ink); padding-top: 24px;">
+              <h2 style="font-size: 20px; font-weight: 700; color: var(--ink); margin-bottom: 16px;">Education, Leadership & Honors</h2>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+                <div class="taxonomy-card">
+                  <h3 class="taxonomy-heading">Education</h3>
+                  <p style="font-size: 13.5px; font-weight: 700; color: var(--ink); margin-bottom: 2px;">Bachelor of Software Engineering</p>
+                  <p style="font-size: 12.5px; color: var(--muted); margin-bottom: 12px;">Kirirom Institute of Technology (KIT)</p>
+                  <p style="font-size: 13.5px; font-weight: 700; color: var(--ink); margin-bottom: 2px;">Leadership Program Short Course</p>
+                  <p style="font-size: 12.5px; color: var(--muted);">University of the Thai Chamber of Commerce (UTCC)</p>
+                </div>
+
+                <div class="taxonomy-card butter-bg">
+                  <h3 class="taxonomy-heading">Honors & Certifications</h3>
+                  <ul style="list-style: none; font-size: 12.5px; line-height: 1.6; color: var(--ink);">
+                    <li>🏆 <strong>1st Runner-Up:</strong> AWS Build on Cambodia Hackathon (2021)</li>
+                    <li>🚀 <strong>Participant:</strong> SmartStart & SmartSpark Innovation (2021)</li>
+                    <li>💡 <strong>Finalist:</strong> Techno Innovation Cambodia (2021)</li>
+                    <li>🗣️ <strong>IELTS Academic 6.5:</strong> Advanced English Proficiency</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ========================================================
+             VIEW 4: RESUME VIEW (PDF Preview & Download)
+             ======================================================== -->
+        <section id="view-resume" class="tab-view">
+          <div class="resume-view-wrap">
+            <div class="resume-actions-bar">
+              <div>
+                <h2 style="font-size: 18px; font-weight: 700; color: var(--ink);">Official Executive Resume</h2>
+                <p style="font-size: 12.5px; color: var(--muted);">3-Page Master Format · Synchronized & Spaced</p>
+              </div>
+              <a href="TekZanith_CV_Updated.pdf" download class="filter-pill" style="background: var(--ink); color: var(--primary); text-decoration: none; padding: 7px 16px; font-size: 12px;">
+                Download PDF ↓
+              </a>
+            </div>
+
+            <!-- PDF Viewer Frame -->
+            <iframe src="TekZanith_CV_Updated.pdf" class="resume-iframe" title="Tek Zanith Executive CV"></iframe>
+          </div>
+        </section>
+
+      
+        <!-- ========================================================
+             VIEW 4: REST API EXPLORER
+             ======================================================== -->
+        <section id="view-api" class="tab-view">
+          <div class="page-inner-container">
+            <div class="page-header-block">
+              <h1 class="page-title">REST API Explorer</h1>
+              <p class="page-desc">
+                Live backend serverless API endpoints powering this portfolio. Test endpoints directly in the browser or query programmatically via cURL.
+              </p>
+            </div>
+
+            <!-- Endpoint Selector Buttons -->
+            <div class="endpoint-btn-row">
+              <button class="endpoint-pill-btn active" onclick="queryApi('/api/projects', this)">GET /api/projects</button>
+              <button class="endpoint-pill-btn" onclick="queryApi('/api/projects?category=mobile', this)">GET ?category=mobile</button>
+              <button class="endpoint-pill-btn" onclick="queryApi('/api/projects?category=ai', this)">GET ?category=ai</button>
+              <button class="endpoint-pill-btn" onclick="queryApi('/api/experience', this)">GET /api/experience</button>
+              <button class="endpoint-pill-btn" onclick="queryApi('/api/skills', this)">GET /api/skills</button>
+              <button class="endpoint-pill-btn" onclick="queryApi('/api/stats', this)">GET /api/stats</button>
+              <button class="endpoint-pill-btn" onclick="queryApi('/api/health', this)">GET /api/health</button>
+            </div>
+
+            <!-- Active Endpoint Display -->
+            <div class="api-card-box" style="background: var(--sage);">
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                <div>
+                  <span class="api-endpoint-badge">ENDPOINT</span>
+                  <strong id="api-url-label" style="font-family: var(--font-mono); font-size: 13px;">/api/projects</strong>
+                </div>
+                <span id="api-status-badge" style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: #15803d;">HTTP 200 OK</span>
+              </div>
+              <pre id="api-json-display" class="api-code-block">Loading live API response...</pre>
+            </div>
+
+            <!-- Test POST /api/contact -->
+            <div class="api-card-box" style="background: var(--butter);">
+              <h2 style="font-size: 16px; font-weight: 700; color: var(--ink); margin-bottom: 4px;">Test POST /api/contact</h2>
+              <p style="font-size: 12.5px; color: var(--muted); margin-bottom: 16px;">Send an inquiry directly to the backend validator and message store.</p>
+              
+              <form id="editorial-contact-form" onsubmit="handleEditorialContact(event)">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                  <input type="text" id="ed-name" class="brutalist-input" placeholder="Your Name" required>
+                  <input type="email" id="ed-email" class="brutalist-input" placeholder="Your Email" required>
+                </div>
+                <input type="text" id="ed-subject" class="brutalist-input" placeholder="Subject (e.g. Senior QA Role)">
+                <textarea id="ed-message" rows="3" class="brutalist-input" placeholder="Your message..." required></textarea>
+                <button type="submit" id="ed-submit-btn" class="brutalist-submit-btn">
+                  Submit Inquiry →
+                </button>
+                <div id="ed-feedback" style="margin-top: 12px; font-family: var(--font-mono); font-size: 12px; display: none; padding: 10px; border: var(--border-ink);"></div>
+              </form>
+            </div>
+
+          </div>
+        </section>
+
+      </main>
+
+    </div>
+  </div>
+
+  <!-- PROJECT DETAIL MODAL DIALOG -->
+  <div class="modal-overlay" id="project-modal" onclick="closeModalOnOverlay(event)">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-title">Project Details</h3>
+        <button class="modal-close-btn" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body" id="modal-body">
+        <!-- Injected via JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- NAVIGATION & TAB ROUTING JAVASCRIPT -->
+  <script>
+    const modalData = {
+      'project-1': {
+        title: 'Enterprise Multi-Tenant B2B SaaS Platform',
+        body: `
+          <p><strong>Role:</strong> Lead QA Automation Engineer & AI Test Architect</p>
+          <p style="margin-top: 10px;"><strong>Key Achievements:</strong></p>
+          <ul style="padding-left: 18px; margin-top: 8px; line-height: 1.7;">
+            <li>Architected a 3-agent specialist swarm (API/Security, Webhooks/Realtime, and UI/Workflow) running parallel validation across multi-role hierarchies, cutting regression cycles by 65%.</li>
+            <li>Designed validation suites for Supabase Row Level Security (RLS) and additive role pyramids, guaranteeing 100% financial and billing data isolation between organizations.</li>
+            <li>Automated 52 critical live-data user journeys in Playwright with a 100% pass rate and 98 automated visual assertions.</li>
+            <li>Verified real-time WebSocket sync latencies and webhook lifecycles under 3 seconds.</li>
+          </ul>
+          <p style="margin-top: 14px;"><strong>Stack:</strong> Playwright, Supabase RLS, PostgreSQL, WebSockets, TypeScript.</p>
+        `
+      },
+      'project-2': {
+        title: 'Cross-Platform Mobile Native Application',
+        body: `
+          <p><strong>Role:</strong> Mobile Quality Lead & Automation Architect</p>
+          <p style="margin-top: 10px;"><strong>Key Achievements:</strong></p>
+          <ul style="padding-left: 18px; margin-top: 8px; line-height: 1.7;">
+            <li>Automated mobile user journeys across 5 extreme device form factors: Pixel Fold (foldable screen), Small Android (720x1280), Pixel 10 Pro XL, iPhone SE, and iPhone 17 Pro Max.</li>
+            <li>Implemented mobile automation pipelines using Maestro CLI, compressing smoke-test execution time from 4 hours to 18 minutes per release candidate.</li>
+            <li>Diagnosed front-end defects down to the AST and component source level, isolating zero-width layout collapses directly in React Native code.</li>
+          </ul>
+          <p style="margin-top: 14px;"><strong>Stack:</strong> React Native, Expo, Maestro CLI, Android API 36/37, iOS Simulator.</p>
+        `
+      },
+      'project-3': {
+        title: 'National E-Government Platform & QA Infrastructure',
+        body: `
+          <p><strong>Role:</strong> Quality Assurance Engineer (Sole Lead)</p>
+          <p style="margin-top: 10px;"><strong>Key Achievements:</strong></p>
+          <ul style="padding-left: 18px; margin-top: 8px; line-height: 1.7;">
+            <li>Solely led QA operations, authoring organization-wide Standard Operating Procedures (SOPs), bug classification matrices, and release sign-off gates.</li>
+            <li>Identified concurrency bottlenecks prior to public rollouts by engineering high-volume stress suites in Apache JMeter under simulated user spikes.</li>
+            <li>Accelerated test suite generation by 50% using AI prompt-engineering pipelines for test matrices and edge-case synthesis.</li>
+            <li>Maintained a 0% critical bug escape rate across all production releases.</li>
+          </ul>
+          <p style="margin-top: 14px;"><strong>Stack:</strong> Apache JMeter, Postman API, Agile/Scrum, Security Gates.</p>
+        `
+      },
+      'project-4': {
+        title: 'Multi-Agent Swarm & Model-Routing Testing Harness',
+        body: `
+          <p><strong>Role:</strong> AI Test Architect</p>
+          <p style="margin-top: 10px;"><strong>Key Achievements:</strong></p>
+          <ul style="padding-left: 18px; margin-top: 8px; line-height: 1.7;">
+            <li>Implemented Model Routing architecture: Delegated complex UI/motion tasks to Claude Opus, mechanical tasks to Sonnet, and backend concurrency logic to Codex Sol.</li>
+            <li>Automated cross-model peer reviews (Codex auditing frontend logic; Claude auditing backend APIs).</li>
+            <li>Designed prompt engineering frameworks for synthetic test data generation and deterministic mock creation.</li>
+          </ul>
+          <p style="margin-top: 14px;"><strong>Stack:</strong> Claude Opus, Claude Sonnet, Codex Sol, Subagent Swarms, TypeScript.</p>
+        `
+      },
+      'project-5': {
+        title: 'High-Concurrency Booking Engines & Tier-1 Banking SSO',
+        body: `
+          <p><strong>Role:</strong> Performance & Security Test Engineer</p>
+          <p style="margin-top: 10px;"><strong>Key Achievements:</strong></p>
+          <ul style="padding-left: 18px; margin-top: 8px; line-height: 1.7;">
+            <li>Executed Production Verification Testing (PVT) and load benchmarks under peak concurrency, validating zero data drops during traffic surges.</li>
+            <li>Validated complex single sign-on (SSO) login matrices for Tier-1 commercial banking integration.</li>
+            <li>Identified database connection pool exhaustion and memory leaks using Locust and JMeter.</li>
+          </ul>
+          <p style="margin-top: 14px;"><strong>Stack:</strong> Locust, Apache JMeter, OAuth 2.0 / SSO, Python.</p>
+        `
+      },
+      'project-6': {
+        title: 'Computer Vision & License Plate Recognition Systems',
+        body: `
+          <p><strong>Role:</strong> QA Engineer / Project Lead</p>
+          <p style="margin-top: 10px;"><strong>Key Achievements:</strong></p>
+          <ul style="padding-left: 18px; margin-top: 8px; line-height: 1.7;">
+            <li>Led QA verification for mission-critical computer vision platforms: Face Recognition Attendance, License Plate Recognition (LPR), and client Mobile SDKs.</li>
+            <li>Built automated CI/CD quality gates using GitLab CI/CD, Jenkins, and Google Cloud Platform (GCP).</li>
+            <li>Reported weekly milestone velocity directly to the CTO, translating defect metrics into release risk assessments.</li>
+          </ul>
+          <p style="margin-top: 14px;"><strong>Stack:</strong> Computer Vision, GitLab CI/CD, Jenkins, GCP, Mobile SDK.</p>
+        `
+      }
+    };
+
+    function triggerProgress() {
+      const bar = document.getElementById('progress-bar');
+      bar.style.opacity = '1';
+      bar.style.width = '30%';
+      setTimeout(() => { bar.style.width = '75%'; }, 100);
+      setTimeout(() => {
+        bar.style.width = '100%';
+        setTimeout(() => {
+          bar.style.opacity = '0';
+          setTimeout(() => { bar.style.width = '0%'; }, 200);
+        }, 150);
+      }, 250);
+    }
+
+    function navigate(tabName) {
+      triggerProgress();
+      document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active-tab'));
+      document.querySelectorAll('.nav-item-btn').forEach(b => b.classList.remove('active'));
+
+      const targetView = document.getElementById(`view-${tabName}`);
+      const targetBtn = document.getElementById(`nav-btn-${tabName}`);
+
+      if (targetView) targetView.classList.add('active-tab');
+      if (targetBtn) targetBtn.classList.add('active');
+
+      window.location.hash = tabName;
+      document.querySelector('.main-viewport').scrollTop = 0;
+
+      // Dispatch dynamic backend API call for active tab
+      if (tabName === 'projects') {
+        fetchAndRenderProjects('all');
+      } else if (tabName === 'about') {
+        apiRequest('/api/skills');
+        apiRequest('/api/experience');
+      } else if (tabName === 'home') {
+        fetchLiveStats();
+      } else if (tabName === 'api') {
+        queryApi('/api/projects');
+      }
+    }
+
+    
+    // ========================================================
+    // CLIENT-SIDE API DISPATCHER & HUD MONITOR
+    // ========================================================
+    const API_BASE = (window.location.protocol === 'file:' || window.location.hostname.includes('github.io'))
+      ? 'https://tekzanith-editorial.vercel.app'
+      : '';
+
+    async function apiRequest(endpoint, options = {}) {
+      const hud = document.getElementById('api-hud');
+      const ind = document.getElementById('hud-indicator');
+      const msg = document.getElementById('hud-message');
+      const lat = document.getElementById('hud-latency');
+
+      const method = options.method || 'GET';
+      const startTime = performance.now();
+
+      if (ind) ind.className = 'hud-indicator busy';
+      if (msg) msg.innerText = method + ' ' + endpoint + '...';
+      if (lat) lat.innerText = '';
+
+      triggerProgress();
+
+      try {
+        const fullUrl = API_BASE + endpoint;
+        const res = await fetch(fullUrl, options);
+        const data = await res.json();
+        const duration = Math.round(performance.now() - startTime);
+
+        if (ind) ind.className = 'hud-indicator';
+        if (msg) msg.innerText = method + ' ' + endpoint + ' [' + res.status + ' OK]';
+        if (lat) lat.innerText = duration + 'ms';
+
+        console.log('[API Call]', method, fullUrl, res.status, duration + 'ms', data);
+        return { ok: res.ok, status: res.status, data: data };
+      } catch (err) {
+        const duration = Math.round(performance.now() - startTime);
+        if (ind) ind.className = 'hud-indicator';
+        if (msg) msg.innerText = method + ' ' + endpoint + ' [FAIL]';
+        if (lat) lat.innerText = duration + 'ms';
+        console.warn('[API Error]', method, endpoint, err);
+        return { ok: false, status: 0, error: err.message };
+      }
+    }
+
+    // Dynamic Project Loader via GET /api/projects
+    const cardColorMap = {
+      'professional': { bg: 'var(--sage)', text: 'var(--sage-text)' },
+      'mobile': { bg: 'var(--sky)', text: 'var(--sky-text)' },
+      'fintech': { bg: 'var(--blush)', text: 'var(--blush-text)' },
+      'ai': { bg: 'var(--butter)', text: 'var(--butter-text)' }
+    };
+
+    async function fetchAndRenderProjects(category = 'all', btn = null) {
+      if (btn) {
+        document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+      }
+
+      const ep = category === 'all' ? '/api/projects' : '/api/projects?category=' + category;
+      const res = await apiRequest(ep);
+
+      if (res.ok && res.data && res.data.data) {
+        const grid = document.getElementById('projects-grid');
+        if (!grid) return;
+
+        grid.innerHTML = res.data.data.map(p => {
+          const colors = cardColorMap[p.category] || { bg: 'var(--sage)', text: 'var(--sage-text)' };
+          const tagPills = p.tags.map(t => '<li class="project-tag-pill">' + t + '</li>').join('');
+          return '<div class="project-card-wrap" data-cat="' + p.category + '" onclick="fetchAndOpenProjectModal(\'' + p.id + '\')">' +
+            '<div class="card-shadow"></div>' +
+            '<div class="project-card-front" style="background: ' + colors.bg + '; color: ' + colors.text + ';">' +
+              '<div class="project-card-body">' +
+                '<div>' +
+                  '<span class="project-cat-tag">' + p.category.toUpperCase() + ' · API VERIFIED</span>' +
+                  '<p class="project-card-text">' + p.summary + '</p>' +
+                '</div>' +
+                '<ul class="project-tags-list">' + tagPills + '</ul>' +
+              '</div>' +
+              '<div class="project-card-footer" style="background: ' + colors.bg + ';">' +
+                '<span>' + p.title + '</span>' +
+                '<span>→</span>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+      }
+    }
+
+    // Modal detail loader via GET /api/projects?id=...
+    async function fetchAndOpenProjectModal(projectId) {
+      const res = await apiRequest('/api/projects?id=' + projectId);
+      const modalTitle = document.getElementById('modal-title');
+      const modalBody = document.getElementById('modal-body');
+
+      if (res.ok && res.data) {
+        const p = res.data;
+        modalTitle.innerText = p.title;
+        const highlightsList = (p.highlights || []).map(h => '<li>' + h + '</li>').join('');
+        modalBody.innerHTML = '<p><strong>Category:</strong> ' + p.category.toUpperCase() + ' · <strong>Status:</strong> Production Verified</p>' +
+          '<p style="margin-top: 10px;"><strong>Architecture & Achievements:</strong></p>' +
+          '<ul style="padding-left: 18px; margin-top: 8px; line-height: 1.7;">' + highlightsList + '</ul>' +
+          '<div style="margin-top: 16px; padding-top: 12px; border-top: 1px dashed rgba(42, 74, 68, 0.2);">' +
+            '<strong>Tech Stack:</strong> ' + p.tags.join(' · ') +
+          '</div>' +
+          '<div style="margin-top: 12px; font-family: var(--font-mono); font-size: 11px; opacity: 0.7;">' +
+            'Fetched in real-time from: /api/projects?id=' + projectId +
+          '</div>';
+        document.getElementById('project-modal').classList.add('active');
+      } else {
+        openModal(projectId);
+      }
+    }
+
+    // Fetch Stats on Home
+    async function fetchLiveStats() {
+      const res = await apiRequest('/api/stats');
+      if (res.ok && res.data && res.data.data) {
+        console.log('[API Stats Loaded]:', res.data.data);
+      }
+    }
+
+    function filterProjects(category, btn) { fetchAndRenderProjects(category, btn); return;
+      document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+
+      const cards = document.querySelectorAll('.project-card-wrap');
+      cards.forEach(card => {
+        const cats = card.getAttribute('data-cat').split(' ');
+        if (category === 'all' || cats.includes(category)) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    function openModal(projectId) {
+      const data = modalData[projectId];
+      if (!data) return;
+      document.getElementById('modal-title').innerText = data.title;
+      document.getElementById('modal-body').innerHTML = data.body;
+      document.getElementById('project-modal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('project-modal').classList.remove('active');
+    }
+
+    function closeModalOnOverlay(e) {
+      if (e.target.id === 'project-modal') {
+        closeModal();
+      }
+    }
+
+    
+    // API Explorer Query Function
+    async function queryApi(endpoint, btn) {
+      if (btn) {
+        document.querySelectorAll('.endpoint-pill-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      }
+      document.getElementById('api-url-label').innerText = endpoint;
+      const display = document.getElementById('api-json-display');
+      const badge = document.getElementById('api-status-badge');
+      display.innerText = 'Calling ' + endpoint + ' ...';
+
+      try {
+        const res = await fetch(endpoint);
+        const data = await res.json();
+        badge.innerText = 'HTTP ' + res.status + ' ' + (res.statusText || 'OK');
+        badge.style.color = res.ok ? '#15803d' : '#b91c1c';
+        display.innerText = JSON.stringify(data, null, 2);
+      } catch (err) {
+        badge.innerText = 'Offline Fallback';
+        badge.style.color = '#b91c1c';
+        display.innerText = '// Error fetching from server: ' + err.message + '\n// Ensure server.js or Vercel function is active.';
+      }
+    }
+
+    // Contact Form Handler for Editorial Portfolio
+    async function handleEditorialContact(e) {
+      e.preventDefault();
+      const btn = document.getElementById('ed-submit-btn');
+      const feedback = document.getElementById('ed-feedback');
+      const name = document.getElementById('ed-name').value;
+      const email = document.getElementById('ed-email').value;
+      const subject = document.getElementById('ed-subject').value;
+      const message = document.getElementById('ed-message').value;
+
+      btn.disabled = true;
+      btn.innerText = 'Sending...';
+      feedback.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, subject, message })
+        });
+        const data = await res.json();
+        feedback.style.display = 'block';
+        if (res.ok) {
+          feedback.style.background = '#dcfce7';
+          feedback.style.color = '#14532d';
+          feedback.innerText = '✓ ' + data.message + (data.referenceId ? ' (Ref: ' + data.referenceId + ')' : '');
+          document.getElementById('editorial-contact-form').reset();
+        } else {
+          feedback.style.background = '#fee2e2';
+          feedback.style.color = '#7f1d1d';
+          feedback.innerText = '✗ ' + (data.error || 'Failed to submit inquiry.');
+        }
+      } catch (err) {
+        feedback.style.display = 'block';
+        feedback.style.background = '#fee2e2';
+        feedback.style.color = '#7f1d1d';
+        feedback.innerText = 'Network error contacting /api/contact. Direct email: Tekzanith@gmail.com';
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Submit Inquiry →';
+      }
+    }
+    // Update navigation hash handler to include 'api'
+    const origNav = navigate;
+
+    // Initialize from hash
+    window.addEventListener('DOMContentLoaded', () => {
+      const hash = window.location.hash.replace('#', '');
+      if (['home', 'projects', 'about', 'api', 'resume'].includes(hash)) {
+        navigate(hash);
+      } else {
+        navigate('home');
+      }
+    });
+
+    window.addEventListener('hashchange', () => {
+      const hash = window.location.hash.replace('#', '');
+      if (['home', 'projects', 'about', 'api', 'resume'].includes(hash)) {
+        navigate(hash);
+      }
+    });
+  </script>
+
+  <!-- Live API Request Monitor HUD -->
+  <div id="api-hud" class="api-hud">
+    <span id="hud-indicator" class="hud-indicator"></span>
+    <span id="hud-message">API: Idle</span>
+    <span id="hud-latency" class="hud-latency"></span>
+  </div>
+</body>
+</html>
