@@ -1,0 +1,21 @@
+{
+  "name": "Tek Zanith — 3D Portfolio & AI Test Architect",
+  "short_name": "TekZanith 3D",
+  "description": "3D Interactive Apple Minimalist x Cyberpunk Arcade Portfolio of Tek Zanith",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050811",
+  "theme_color": "#00ffff",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
