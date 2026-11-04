@@ -5,3 +5,4 @@ dist/
 # Nested Git Repositories
 Website_Portfolios/TekZanith_Editorial_Portfolio/
 Website_Portfolios/TekZanith_Portfolio_Website/
+.vercel
