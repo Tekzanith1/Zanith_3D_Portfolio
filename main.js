@@ -681,22 +681,8 @@ charConfigs.forEach((cfg, idx) => {
   });
 });
 
-const projectiles = [];
 const sparks = [];
 
-function fireLaser(fromPos, toPos, color) {
-  const geom = new THREE.CylinderGeometry(0.04, 0.04, 0.5, 8);
-  const mat = new THREE.MeshBasicMaterial({ color });
-  const laser = new THREE.Mesh(geom, mat);
-  laser.position.copy(fromPos);
-
-  const dir = new THREE.Vector3().subVectors(toPos, fromPos).normalize();
-  laser.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
-  scene.add(laser);
-
-  projectiles.push({ mesh: laser, dir, life: 60 });
-  synth.playLaser(fromPos.x);
-}
 
 function spawnSparks(pos, color) {
   for (let i = 0; i < 16; i++) {
@@ -1087,21 +1073,12 @@ function animate(time) {
       if (Math.abs(char.mesh.position.x) > 8) char.velocity.x *= -1;
       if (Math.abs(char.mesh.position.y) > 4) char.velocity.y *= -1;
 
-      if (Math.random() < 0.08 && !isMiniGameActive) {
-        fireLaser(char.mesh.position, char.target, char.config.color);
+      // Proximity sparring reaction without laser projectiles
+      const dist = char.mesh.position.distanceTo(char.target);
+      if (dist < 1.2 && Math.random() < 0.05) {
+        spawnSparks(char.mesh.position, char.config.color);
       }
     });
-
-    for (let i = projectiles.length - 1; i >= 0; i--) {
-      const p = projectiles[i];
-      p.mesh.position.add(p.dir.clone().multiplyScalar(0.45));
-      p.life--;
-      if (p.life <= 0) {
-        spawnSparks(p.mesh.position, 0x00ffff);
-        scene.remove(p.mesh);
-        projectiles.splice(i, 1);
-      }
-    }
 
     for (let i = sparks.length - 1; i >= 0; i--) {
       const s = sparks[i];
