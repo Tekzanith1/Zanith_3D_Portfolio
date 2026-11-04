@@ -248,7 +248,7 @@ const PORTFOLIO_DATA = {
 };
 
 // ============================================================================
-// 2. PROCEDURAL 8-BIT WEB AUDIO SYNTHESIZER
+// 2. PROCEDURAL 8-BIT WEB AUDIO SYNTHESIZER WITH ANALYSER NODE
 // ============================================================================
 class WebAudioSynth {
   constructor() {
@@ -256,6 +256,8 @@ class WebAudioSynth {
     this.isMuted = true;
     this.masterGain = null;
     this.compressor = null;
+    this.analyser = null;
+    this.audioData = null;
   }
 
   init() {
@@ -274,7 +276,13 @@ class WebAudioSynth {
     this.masterGain = this.ctx.createGain();
     this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : 0.45, this.ctx.currentTime);
 
-    this.masterGain.connect(this.compressor);
+    // Audio-reactive analyser
+    this.analyser = this.ctx.createAnalyser();
+    this.analyser.fftSize = 64;
+    this.audioData = new Uint8Array(this.analyser.frequencyBinCount);
+
+    this.masterGain.connect(this.analyser);
+    this.analyser.connect(this.compressor);
     this.compressor.connect(this.ctx.destination);
   }
 
@@ -295,6 +303,14 @@ class WebAudioSynth {
       this.playCoinChime();
     }
     return !this.isMuted;
+  }
+
+  getAudioLevel() {
+    if (this.isMuted || !this.analyser || !this.ctx) return 0;
+    this.analyser.getByteFrequencyData(this.audioData);
+    let sum = 0;
+    for (let i = 0; i < this.audioData.length; i++) sum += this.audioData[i];
+    return sum / (this.audioData.length * 255);
   }
 
   playCoinChime() {
@@ -337,34 +353,6 @@ class WebAudioSynth {
     osc.stop(now + 0.07);
   }
 
-  playLaser(panX = 0) {
-    if (this.isMuted || !this.ctx) return;
-    const now = this.ctx.currentTime;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    const panner = this.ctx.createStereoPanner ? this.ctx.createStereoPanner() : null;
-
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(880, now);
-    osc.frequency.exponentialRampToValueAtTime(110, now + 0.12);
-
-    gain.gain.setValueAtTime(0.12, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
-
-    if (panner) {
-      panner.pan.setValueAtTime(Math.max(-1, Math.min(1, panX / 10)), now);
-      osc.connect(gain);
-      gain.connect(panner);
-      panner.connect(this.masterGain);
-    } else {
-      osc.connect(gain);
-      gain.connect(this.masterGain);
-    }
-
-    osc.start(now);
-    osc.stop(now + 0.15);
-  }
-
   playHit() {
     if (this.isMuted || !this.ctx) return;
     const now = this.ctx.currentTime;
@@ -401,7 +389,7 @@ const synth = new WebAudioSynth();
 // ============================================================================
 const container = document.getElementById('canvas-container');
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x050811, 0.025);
+scene.fog = new THREE.FogExp2(0x050811, 0.024);
 
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(0, 0, 10);
@@ -443,21 +431,69 @@ spotLight.target.position.set(2, 0, 0);
 scene.add(spotLight);
 scene.add(spotLight.target);
 
-// Ground Synthwave Infinite Grid
-const gridHelper = new THREE.GridHelper(60, 40, 0x00ffff, 0x111c33);
-gridHelper.position.y = -5;
-scene.add(gridHelper);
+// ----------------------------------------------------------------------------
+// Point 2: Animated Infinite Horizon Grid Shader
+// ----------------------------------------------------------------------------
+const gridVertexShader = `
+  varying vec3 vWorldPos;
+  void main() {
+    vWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;
+    gl_Position = projectionMatrix * viewMatrix * vec4(vWorldPos, 1.0);
+  }
+`;
 
-// 3-Layer Parallax Nebula Starfield
+const gridFragmentShader = `
+  uniform float uTime;
+  uniform vec3 uGridColor;
+  uniform vec3 uLineColor;
+  varying vec3 vWorldPos;
+  void main() {
+    vec2 coord = vWorldPos.xz * 0.45;
+    coord.y += uTime * 0.75;
+    vec2 grid = abs(fract(coord - 0.5) - 0.5) / fwidth(coord);
+    float line = min(grid.x, grid.y);
+    float c = 1.0 - min(line, 1.0);
+
+    float dist = length(vWorldPos.xz);
+    float fade = smoothstep(44.0, 10.0, dist);
+
+    vec3 col = mix(uLineColor, uGridColor, c);
+    gl_FragColor = vec4(col, (c * 0.85 + 0.12) * fade);
+  }
+`;
+
+const gridUniforms = {
+  uTime: { value: 0 },
+  uGridColor: { value: new THREE.Color(0x00ffff) },
+  uLineColor: { value: new THREE.Color(0x0a1428) }
+};
+
+const gridMat = new THREE.ShaderMaterial({
+  vertexShader: gridVertexShader,
+  fragmentShader: gridFragmentShader,
+  uniforms: gridUniforms,
+  transparent: true,
+  depthWrite: false
+});
+
+const gridMesh = new THREE.Mesh(new THREE.PlaneGeometry(90, 90, 1, 1), gridMat);
+gridMesh.rotation.x = -Math.PI / 2;
+gridMesh.position.y = -5;
+scene.add(gridMesh);
+
+// ----------------------------------------------------------------------------
+// Point 3: Audio-Reactive 3-Layer Parallax Nebula Starfield
+// ----------------------------------------------------------------------------
+const starLayers = [];
 function createStarfield() {
   const group = new THREE.Group();
   const layers = [
-    { count: 1200, size: 0.05, color: 0xffffff, range: 80 },
-    { count: 600, size: 0.08, color: 0x00ffff, range: 60 },
-    { count: 300, size: 0.12, color: 0xff007f, range: 40 }
+    { count: 1200, baseSize: 0.05, color: 0xffffff, range: 80 },
+    { count: 600, baseSize: 0.08, color: 0x00ffff, range: 60 },
+    { count: 300, baseSize: 0.12, color: 0xff007f, range: 40 }
   ];
 
-  layers.forEach(({ count, size, color, range }) => {
+  layers.forEach(({ count, baseSize, color, range }) => {
     const geo = new THREE.BufferGeometry();
     const pos = new Float32Array(count * 3);
     for (let i = 0; i < count * 3; i += 3) {
@@ -466,14 +502,89 @@ function createStarfield() {
       pos[i + 2] = (Math.random() - 0.5) * range;
     }
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    const mat = new THREE.PointsMaterial({ size, color, transparent: true, opacity: 0.85 });
-    group.add(new THREE.Points(geo, mat));
+    const mat = new THREE.PointsMaterial({ size: baseSize, color, transparent: true, opacity: 0.85 });
+    const points = new THREE.Points(geo, mat);
+    group.add(points);
+    starLayers.push({ points, baseSize, mat });
   });
 
   return group;
 }
 const starfield = createStarfield();
 scene.add(starfield);
+
+// ----------------------------------------------------------------------------
+// Point 1: Floating Telemetric Code Glyphs & Assertion Tokens
+// ----------------------------------------------------------------------------
+function createTextSprite(text, color = '#00ffff') {
+  const canvas = document.createElement('canvas');
+  canvas.width = 400;
+  canvas.height = 64;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = 'rgba(7, 14, 28, 0.72)';
+  ctx.roundRect(4, 4, 392, 56, 10);
+  ctx.fill();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.fillStyle = color;
+  ctx.font = 'bold 19px monospace';
+  ctx.fillText(text, 18, 38);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.magFilter = THREE.LinearFilter;
+  const mat = new THREE.SpriteMaterial({ map: texture, transparent: true, opacity: 0.35 });
+  const sprite = new THREE.Sprite(mat);
+  sprite.scale.set(3.8, 0.62, 1);
+  return sprite;
+}
+
+const codeTokens = [
+  "expect(rls).toBe('STRICT')",
+  "HTTP 200 OK (38ms)",
+  "iOS 18 DVT Frame Captured",
+  "assert.strictEqual(escapes, 0)",
+  "✓ 52/52 Journeys Pass",
+  "Maestro Smoke: 18m"
+];
+
+const tokenSprites = [];
+codeTokens.forEach((tokenText, idx) => {
+  const sprite = createTextSprite(tokenText, idx % 2 === 0 ? '#00ffff' : '#ff007f');
+  sprite.position.set(
+    (Math.random() - 0.5) * 16,
+    -3 + idx * 1.6 + (Math.random() - 0.5),
+    -1 + (Math.random() - 0.5) * 5
+  );
+  sprite.userData = { speed: 0.005 + Math.random() * 0.005 };
+  scene.add(sprite);
+  tokenSprites.push(sprite);
+});
+
+// ----------------------------------------------------------------------------
+// Point 4: Dynamic Section-Based Volumetric Atmosphere
+// ----------------------------------------------------------------------------
+const THEME_COLORS = {
+  skills: { fog: 0x050a14, key: 0x00ffff, rim: 0xff007f, grid: 0x00ffff },
+  projects: { fog: 0x140511, key: 0xff007f, rim: 0x00ffff, grid: 0xff007f },
+  experience: { fog: 0x141005, key: 0xffd60a, rim: 0xff007f, grid: 0xffd60a },
+  credentials: { fog: 0x0a071c, key: 0x8b5cf6, rim: 0x00ffff, grid: 0x8b5cf6 },
+  terminal: { fog: 0x031408, key: 0x39ff14, rim: 0x00ffff, grid: 0x39ff14 }
+};
+
+function updateAtmosphere(themeKey) {
+  const cfg = THEME_COLORS[themeKey] || THEME_COLORS.skills;
+  const targetFog = new THREE.Color(cfg.fog);
+  const targetKey = new THREE.Color(cfg.key);
+  const targetRim = new THREE.Color(cfg.rim);
+  const targetGrid = new THREE.Color(cfg.grid);
+
+  gsap.to(scene.fog.color, { r: targetFog.r, g: targetFog.g, b: targetFog.b, duration: 1.4 });
+  gsap.to(keyLight.color, { r: targetKey.r, g: targetKey.g, b: targetKey.b, duration: 1.4 });
+  gsap.to(rimLight.color, { r: targetRim.r, g: targetRim.g, b: targetRim.b, duration: 1.4 });
+  gsap.to(gridUniforms.uGridColor.value, { r: targetGrid.r, g: targetGrid.g, b: targetGrid.b, duration: 1.4 });
+}
 
 // ============================================================================
 // 4. CRT OFF-SCREEN CANVAS TEXTURE & 3D ARCADE CABINET MODEL
@@ -644,12 +755,10 @@ scene.add(arcadeGroup);
 renderCRTMonitor('018,450', 'AI TEST ARCHITECT');
 
 // ============================================================================
-// 5. 24FPS LOCAL ANIME CHARACTER COMBAT & MINI-GAME SYSTEM
+// 5. MINI-GAME SYSTEM ("FIX THE RELEASE")
 // ============================================================================
 const textureLoader = new THREE.TextureLoader();
-
 const sparks = [];
-
 
 function spawnSparks(pos, color) {
   for (let i = 0; i < 16; i++) {
@@ -666,7 +775,6 @@ function spawnSparks(pos, color) {
   }
 }
 
-// Mini-Game Mode ("Fix The Release")
 let isMiniGameActive = false;
 let miniGameTimer = 60;
 let miniGameBugsCount = 0;
@@ -795,6 +903,9 @@ function renderHUDTab(tabKey) {
   comboMultiplier = Math.min(8, comboMultiplier + 1);
   comboDisplay.innerText = `COMBO x${comboMultiplier}`;
   addScore(100);
+
+  // Trigger atmospheric color shift
+  updateAtmosphere(tabKey);
 
   if (tabKey === 'skills') {
     let html = '';
@@ -983,20 +1094,36 @@ window.addEventListener('pointerdown', (e) => {
       synth.playButtonBlip(400);
       return;
     }
-
   }
 });
 
 // ============================================================================
-// 9. ANIMATION LOOP & 24FPS COMBAT ENGINE
+// 9. ANIMATION LOOP, SHADERS & PARALLAX DAMPING
 // ============================================================================
-let lastCombatTime = 0;
 let mouseX = 0, mouseY = 0;
+let targetMouseX = 0, targetMouseY = 0;
+let camParallaxX = 0, camParallaxY = 0;
+
+const topNavbar = document.getElementById('top-navbar');
+const quickNavPill = document.getElementById('quick-nav-pill');
 
 window.addEventListener('pointermove', (e) => {
-  mouseX = (e.clientX / window.innerWidth) * 2 - 1;
-  mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+  targetMouseX = (e.clientX / window.innerWidth) * 2 - 1;
+  targetMouseY = -(e.clientY / window.innerHeight) * 2 + 1;
 
+  // Specular Sheen Cursor Tracking
+  if (topNavbar) {
+    const rect = topNavbar.getBoundingClientRect();
+    topNavbar.style.setProperty('--mouse-nav-x', `${e.clientX - rect.left}px`);
+    topNavbar.style.setProperty('--mouse-nav-y', `${e.clientY - rect.top}px`);
+  }
+  if (quickNavPill) {
+    const rect = quickNavPill.getBoundingClientRect();
+    quickNavPill.style.setProperty('--mouse-pill-x', `${e.clientX - rect.left}px`);
+    quickNavPill.style.setProperty('--mouse-pill-y', `${e.clientY - rect.top}px`);
+  }
+
+  // Custom Crosshair Cursor
   const cursor = document.getElementById('custom-cursor');
   const ring = document.getElementById('cursor-ring');
   if (cursor && ring) {
@@ -1007,43 +1134,72 @@ window.addEventListener('pointermove', (e) => {
   }
 });
 
+// Mobile Gyroscope Parallax
+window.addEventListener('deviceorientation', (e) => {
+  if (e.gamma !== null && e.beta !== null) {
+    targetMouseX = Math.max(-1, Math.min(1, e.gamma / 25));
+    targetMouseY = Math.max(-1, Math.min(1, (e.beta - 45) / 25));
+  }
+});
+
 function animate(time) {
   requestAnimationFrame(animate);
 
+  // Update Infinite Grid Shader
+  gridUniforms.uTime.value = time * 0.001;
+
+  // Spring Damping Inertial Parallax
+  camParallaxX += (targetMouseX * 0.45 - camParallaxX) * 0.05;
+  camParallaxY += (-targetMouseY * 0.35 - camParallaxY) * 0.05;
+
+  if (currentCamView === 'hero') {
+    camera.position.x = camParallaxX;
+    camera.position.y = camParallaxY;
+  }
+
+  // Audio-reactive nebula pulse
+  const audioLevel = synth.getAudioLevel();
+  starLayers.forEach(layer => {
+    layer.mat.size = layer.baseSize * (1.0 + audioLevel * 1.5);
+    layer.mat.opacity = 0.85 + audioLevel * 0.15;
+  });
+  bloomPass.strength = 0.65 + audioLevel * 0.55;
+
+  // Background Starfield Drift
   starfield.rotation.y += 0.0006;
   starfield.rotation.x += 0.0003;
 
-  if (currentCamView === 'hero') {
-    camera.position.x = mouseX * 0.4;
-    camera.position.y = -mouseY * 0.3;
+  // Drift Floating Code Glyphs
+  tokenSprites.forEach(sprite => {
+    sprite.position.y += sprite.userData.speed;
+    if (sprite.position.y > 6.0) {
+      sprite.position.y = -3.5;
+      sprite.position.x = (Math.random() - 0.5) * 16;
+    }
+  });
+
+  // Update spark particles
+  for (let i = sparks.length - 1; i >= 0; i--) {
+    const s = sparks[i];
+    s.mesh.position.add(s.vel);
+    s.life--;
+    if (s.life <= 0) {
+      scene.remove(s.mesh);
+      sparks.splice(i, 1);
+    }
   }
 
-  // 24fps Anime Character Combat Loop
-  if (time - lastCombatTime > 1000 / 24) {
-    lastCombatTime = time;
-
-
-    for (let i = sparks.length - 1; i >= 0; i--) {
-      const s = sparks[i];
-      s.mesh.position.add(s.vel);
-      s.life--;
-      if (s.life <= 0) {
-        scene.remove(s.mesh);
-        sparks.splice(i, 1);
-      }
-    }
-
-    if (isMiniGameActive) {
-      for (let i = miniGameBugs.length - 1; i >= 0; i--) {
-        const bug = miniGameBugs[i];
-        bug.position.y -= 0.06;
-        if (bug.position.y < -4.5) {
-          scene.remove(bug);
-          miniGameBugs.splice(i, 1);
-          synth.playHit();
-          comboMultiplier = 1;
-          comboDisplay.innerText = 'COMBO x1';
-        }
+  // Update falling mini-game bugs
+  if (isMiniGameActive) {
+    for (let i = miniGameBugs.length - 1; i >= 0; i--) {
+      const bug = miniGameBugs[i];
+      bug.position.y -= 0.06;
+      if (bug.position.y < -4.5) {
+        scene.remove(bug);
+        miniGameBugs.splice(i, 1);
+        synth.playHit();
+        comboMultiplier = 1;
+        comboDisplay.innerText = 'COMBO x1';
       }
     }
   }
@@ -1053,31 +1209,205 @@ function animate(time) {
 requestAnimationFrame(animate);
 
 // ============================================================================
-// 10. EASTER EGGS: KONAMI CODE
+// 10. DUAL-MODE SWITCHER & SPOTLIGHT COMMAND PALETTE
 // ============================================================================
-const konamiKeys = [
-  'ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown',
-  'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight',
-  'b', 'a'
+// Point 9: Dual-Mode Switcher ("Arcade Mode" vs. "Executive Mode")
+const btnModeToggle = document.getElementById('btn-mode-toggle');
+const modeIcon = document.getElementById('mode-icon');
+const modeText = document.getElementById('mode-text');
+
+function applyMode(mode) {
+  const isExec = (mode === 'executive');
+  document.body.classList.toggle('executive-mode', isExec);
+  if (modeIcon) modeIcon.innerText = isExec ? '💼' : '🕹️';
+  if (modeText) modeText.innerText = isExec ? 'EXECUTIVE' : 'ARCADE';
+  localStorage.setItem('tekzanith-mode', mode);
+}
+
+const savedMode = localStorage.getItem('tekzanith-mode') || 'arcade';
+applyMode(savedMode);
+
+if (btnModeToggle) {
+  btnModeToggle.addEventListener('click', () => {
+    const current = document.body.classList.contains('executive-mode') ? 'executive' : 'arcade';
+    const next = current === 'executive' ? 'arcade' : 'executive';
+    applyMode(next);
+    synth.playButtonBlip(750);
+  });
+}
+
+// Point 10: Spotlight Command Palette (⌘K)
+const commandModal = document.getElementById('command-modal');
+const commandInput = document.getElementById('command-input');
+const commandResults = document.getElementById('command-results');
+const btnSearchTrigger = document.getElementById('btn-search-trigger');
+const btnCloseCommand = document.getElementById('btn-close-command');
+
+const SEARCH_ITEMS = [
+  ...PORTFOLIO_DATA.projects.map(p => ({
+    title: p.title,
+    badge: p.category,
+    icon: '🚀',
+    action: () => openProjectModal(p.id)
+  })),
+  ...PORTFOLIO_DATA.skills.flatMap(s => s.items.map(item => ({
+    title: item,
+    badge: s.category,
+    icon: s.icon,
+    action: () => renderHUDTab('skills')
+  }))),
+  {
+    title: 'Download Executive CV (PDF)',
+    badge: 'Resume',
+    icon: '📄',
+    action: () => window.open('/TekZanith_CV_Updated.pdf', '_blank')
+  },
+  {
+    title: 'Play "Fix The Release" Mini-Game',
+    badge: 'Arcade',
+    icon: '🕹️',
+    action: () => startMiniGame()
+  },
+  {
+    title: 'Switch to CRT Screen Camera View',
+    badge: 'Camera',
+    icon: '🖥️',
+    action: () => setCameraView('screen')
+  },
+  {
+    title: 'Switch to Hero Camera View',
+    badge: 'Camera',
+    icon: '🌌',
+    action: () => setCameraView('hero')
+  },
+  {
+    title: 'Toggle Executive / Arcade Mode',
+    badge: 'Settings',
+    icon: '⚡',
+    action: () => btnModeToggle.click()
+  },
+  {
+    title: 'Contact Tek Zanith (Transmission)',
+    badge: 'Contact',
+    icon: '✉️',
+    action: () => openContactModal()
+  }
 ];
+
+let selectedCommandIndex = 0;
+
+function openCommandPalette() {
+  commandModal.classList.remove('hidden');
+  commandInput.value = '';
+  renderCommandResults('');
+  commandInput.focus();
+  synth.playButtonBlip(780);
+}
+
+function closeCommandPalette() {
+  commandModal.classList.add('hidden');
+}
+
+function renderCommandResults(query) {
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? SEARCH_ITEMS.filter(item => item.title.toLowerCase().includes(q) || item.badge.toLowerCase().includes(q))
+    : SEARCH_ITEMS.slice(0, 8);
+
+  selectedCommandIndex = 0;
+  if (filtered.length === 0) {
+    commandResults.innerHTML = `<div style="padding:16px; text-align:center; color:var(--apple-muted); font-size:0.85rem;">No matching commands or projects found.</div>`;
+    return;
+  }
+
+  commandResults.innerHTML = filtered.map((item, idx) => `
+    <div class="command-item ${idx === 0 ? 'selected' : ''}" data-idx="${idx}">
+      <div class="command-item-left">
+        <span class="command-item-icon">${item.icon}</span>
+        <span class="command-item-title">${item.title}</span>
+      </div>
+      <span class="command-item-badge">${item.badge}</span>
+    </div>
+  `).join('');
+
+  document.querySelectorAll('.command-item').forEach((el, idx) => {
+    el.addEventListener('click', () => {
+      filtered[idx].action();
+      closeCommandPalette();
+    });
+  });
+}
+
+if (btnSearchTrigger) btnSearchTrigger.addEventListener('click', openCommandPalette);
+if (btnCloseCommand) btnCloseCommand.addEventListener('click', closeCommandPalette);
+
+commandInput.addEventListener('input', (e) => {
+  renderCommandResults(e.target.value);
+});
+
+// Keyboard Navigation & Shortcuts
+const konamiKeys = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
 let konamiIndex = 0;
 
 window.addEventListener('keydown', (e) => {
+  // Command Palette Shortcut: ⌘K or Ctrl+K
+  if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+    e.preventDefault();
+    if (commandModal.classList.contains('hidden')) {
+      openCommandPalette();
+    } else {
+      closeCommandPalette();
+    }
+    return;
+  }
+
+  // Handle Command Palette arrow keys & Enter
+  if (!commandModal.classList.contains('hidden')) {
+    const items = commandResults.querySelectorAll('.command-item');
+    if (e.key === 'Escape') {
+      closeCommandPalette();
+      return;
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      selectedCommandIndex = (selectedCommandIndex + 1) % items.length;
+      items.forEach((it, i) => it.classList.toggle('selected', i === selectedCommandIndex));
+      return;
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      selectedCommandIndex = (selectedCommandIndex - 1 + items.length) % items.length;
+      items.forEach((it, i) => it.classList.toggle('selected', i === selectedCommandIndex));
+      return;
+    }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const activeEl = items[selectedCommandIndex];
+      if (activeEl) activeEl.click();
+      return;
+    }
+  }
+
+  // Konami Code Detection
   if (e.key === konamiKeys[konamiIndex] || e.key.toLowerCase() === konamiKeys[konamiIndex]) {
     konamiIndex++;
     if (konamiIndex === konamiKeys.length) {
-      activateKonamiMode();
+      document.body.classList.toggle('golden-theme');
+      addScore(10000);
+      synth.playFanfare();
       konamiIndex = 0;
     }
   } else {
     konamiIndex = 0;
   }
 
+  // Quick Tab Switching with Keys 1-5
   if (['1', '2', '3', '4', '5'].includes(e.key)) {
     const tabs = ['skills', 'projects', 'experience', 'credentials', 'terminal'];
     renderHUDTab(tabs[parseInt(e.key) - 1]);
   }
 
+  // Joystick tilt with WASD / Arrows
   if (['w', 'a', 's', 'd', 'ArrowUp', 'ArrowLeft', 'ArrowDown', 'ArrowRight'].includes(e.key)) {
     gsap.to(joystickPivot.rotation, {
       x: e.key === 'w' || e.key === 'ArrowUp' ? -0.3 : (e.key === 's' || e.key === 'ArrowDown' ? 0.3 : 0),
@@ -1089,12 +1419,6 @@ window.addEventListener('keydown', (e) => {
     synth.playButtonBlip(480);
   }
 });
-
-function activateKonamiMode() {
-  document.body.classList.toggle('golden-theme');
-  addScore(10000);
-  synth.playFanfare();
-}
 
 // ============================================================================
 // 11. EVENT LISTENERS & UI WIRING
@@ -1109,9 +1433,9 @@ const loadInterval = setInterval(() => {
   document.getElementById('loader-percent').innerText = `${loadProgress}%`;
 
   if (loadProgress === 40) {
-    document.getElementById('loader-status').innerText = 'Initializing Three.js PBR Shaders...';
+    document.getElementById('loader-status').innerText = 'Compiling GLSL Infinite Grid Shaders...';
   } else if (loadProgress === 80) {
-    document.getElementById('loader-status').innerText = 'Synthesizing 8-Bit Web Audio Nodes...';
+    document.getElementById('loader-status').innerText = 'Synthesizing Audio Analyser Nodes...';
   } else if (loadProgress >= 100) {
     clearInterval(loadInterval);
     document.getElementById('loader-status').innerText = 'SYSTEM READY // ALL CHANNELS PASS';

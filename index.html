@@ -56,11 +56,28 @@
 
   <div id="app">
     <!-- Apple-Grade Frosted Glass Navigation -->
-    <header class="navbar">
+    <header class="navbar" id="top-navbar">
       <div class="nav-left">
         <div class="brand-logo">
           <span class="logo-text">TEK ZANITH</span>
           <span class="badge-status"><span class="status-dot"></span>PROD READY</span>
+        </div>
+      </div>
+
+      <!-- Live Telemetric QA Status Ticker (QA Heartbeat) -->
+      <div class="telemetry-ticker-container">
+        <div class="telemetry-ticker">
+          <span class="ticker-item"><span class="ticker-dot green"></span> LATENCY: 38ms</span>
+          <span class="ticker-sep">•</span>
+          <span class="ticker-item"><span class="ticker-dot green"></span> SUITES: 52/52 PASS</span>
+          <span class="ticker-sep">•</span>
+          <span class="ticker-item"><span class="ticker-dot cyan"></span> SUPABASE RLS: 100% ISOLATED</span>
+          <span class="ticker-sep">•</span>
+          <span class="ticker-item"><span class="ticker-dot pink"></span> REAL DEVICE: iPhone 13 Pro Max (DVT iOS 18)</span>
+          <span class="ticker-sep">•</span>
+          <span class="ticker-item"><span class="ticker-dot yellow"></span> BUG ESCAPES: 0.00%</span>
+          <span class="ticker-sep">•</span>
+          <span class="ticker-item"><span class="ticker-dot green"></span> MAESTRO SMOKE: 18m</span>
         </div>
       </div>
 
@@ -73,6 +90,18 @@
       </div>
 
       <div class="nav-right">
+        <!-- Command Palette Trigger (⌘K) -->
+        <button id="btn-search-trigger" class="btn-search" title="Spotlight Quick Search (⌘K / Ctrl+K)">
+          <span class="search-icon">🔍</span>
+          <span class="search-key">⌘K</span>
+        </button>
+
+        <!-- Dual-Mode Switcher (Arcade vs. Executive) -->
+        <button id="btn-mode-toggle" class="btn-mode-toggle" title="Toggle Executive vs. Arcade Mode">
+          <span class="mode-icon" id="mode-icon">🕹️</span>
+          <span class="mode-text" id="mode-text">ARCADE</span>
+        </button>
+
         <!-- Sister Portfolios Dropdown / Links -->
         <div class="portfolio-links">
           <a href="https://tekzanith-editorial.vercel.app" target="_blank" rel="noopener" class="nav-sublink" title="Open Editorial Neubrutalist Portfolio">
@@ -130,13 +159,32 @@
     </section>
 
     <!-- Bottom Center Floating Quick-Nav Pill -->
-    <nav class="quick-nav-pill" aria-label="Quick Section Navigation">
-      <button class="pill-item active" data-tab="skills">01 Skills</button>
-      <button class="pill-item" data-tab="projects">02 Projects</button>
-      <button class="pill-item" data-tab="experience">03 Experience</button>
-      <button class="pill-item" data-tab="credentials">04 Credentials</button>
-      <button class="pill-item" data-tab="terminal">05 Live QA Logs</button>
-      <button class="pill-item" data-action="contact">06 Contact</button>
+    <!-- Bottom Center Floating Quick-Nav Pill (Apple Dynamic Island Style) -->
+    <nav class="quick-nav-pill" id="quick-nav-pill" aria-label="Quick Section Navigation">
+      <button class="pill-item active" data-tab="skills">
+        <span class="pill-label">01 Skills</span>
+        <span class="pill-preview">5 Core Disciplines</span>
+      </button>
+      <button class="pill-item" data-tab="projects">
+        <span class="pill-label">02 Projects</span>
+        <span class="pill-preview">6 Production Architectures</span>
+      </button>
+      <button class="pill-item" data-tab="experience">
+        <span class="pill-label">03 Experience</span>
+        <span class="pill-preview">4+ Yrs Enterprise Lead</span>
+      </button>
+      <button class="pill-item" data-tab="credentials">
+        <span class="pill-label">04 Credentials</span>
+        <span class="pill-preview">5 Security Modules + B.S.</span>
+      </button>
+      <button class="pill-item" data-tab="terminal">
+        <span class="pill-label">05 Live QA Logs</span>
+        <span class="pill-preview">Runtime Telemetry</span>
+      </button>
+      <button class="pill-item" data-action="contact">
+        <span class="pill-label">06 Contact</span>
+        <span class="pill-preview">Direct Transmission</span>
+      </button>
     </nav>
 
     <!-- Retro Arcade HUD Floating Panel (Collapsible / Draggable / Tabbed) -->
@@ -255,6 +303,22 @@
             <span id="contact-feedback" class="contact-feedback"></span>
           </div>
         </form>
+      </div>
+    </div>
+    <!-- Command Palette / Spotlight Search Modal (⌘K) -->
+    <div id="command-modal" class="modal-backdrop hidden" aria-hidden="true" role="dialog">
+      <div class="modal-card command-card">
+        <div class="command-input-wrapper">
+          <span class="search-prefix">⌘K</span>
+          <input type="text" id="command-input" placeholder="Type to search projects, skills, tools, actions (e.g. Supabase, Maestro, CV)..." autocomplete="off" spellcheck="false">
+          <button id="btn-close-command" class="btn-close-command" aria-label="Close Spotlight">&times;</button>
+        </div>
+        <div class="command-results" id="command-results">
+          <!-- Rendered dynamically -->
+        </div>
+        <div class="command-footer">
+          <span>Navigate with <kbd>↑</kbd> <kbd>↓</kbd> • <kbd>Enter</kbd> to select • <kbd>Esc</kbd> to exit</span>
+        </div>
       </div>
     </div>
 
