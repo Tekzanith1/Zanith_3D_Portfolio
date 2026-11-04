@@ -647,39 +647,6 @@ renderCRTMonitor('018,450', 'AI TEST ARCHITECT');
 // 5. 24FPS LOCAL ANIME CHARACTER COMBAT & MINI-GAME SYSTEM
 // ============================================================================
 const textureLoader = new THREE.TextureLoader();
-const characters = [];
-const charConfigs = [
-  { name: 'Naruto', color: 0xffaa00, file: '/assets/naruto.png', role: 'Automation Shinobi' },
-  { name: 'Goku', color: 0xff5500, file: '/assets/goku.png', role: 'Concurrency Saiyan' },
-  { name: 'Saitama', color: 0xffd60a, file: '/assets/saitama.png', role: 'One-Punch QA' },
-  { name: 'Itadori', color: 0xff007f, file: '/assets/itadori.png', role: 'Curse Bug Hunter' }
-];
-
-charConfigs.forEach((cfg, idx) => {
-  const tex = textureLoader.load(cfg.file);
-  tex.magFilter = THREE.NearestFilter;
-  tex.minFilter = THREE.NearestFilter;
-
-  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
-  const sprite = new THREE.Sprite(mat);
-  sprite.scale.set(1.6, 1.6, 1);
-
-  const xInit = -4 + (idx % 2) * 2.5 + (Math.random() - 0.5);
-  const yInit = -1 + Math.floor(idx / 2) * 2.2 + (Math.random() - 0.5);
-  sprite.position.set(xInit, yInit, 1.5);
-  sprite.userData = { id: 'character', name: cfg.name, role: cfg.role, color: cfg.color };
-
-  scene.add(sprite);
-  raycastTargets.push(sprite);
-
-  characters.push({
-    mesh: sprite,
-    target: null,
-    velocity: new THREE.Vector3(),
-    health: 100,
-    config: cfg
-  });
-});
 
 const sparks = [];
 
@@ -716,7 +683,7 @@ function startMiniGame() {
   document.getElementById('game-timer').innerText = `${miniGameTimer}s`;
   document.getElementById('game-bugs-count').innerText = '0';
 
-  setCameraView('arena');
+  setCameraView('overview');
   synth.playFanfare();
 
   clearInterval(miniGameInterval);
@@ -775,7 +742,7 @@ function endMiniGame() {
 const CAMERA_RIGS = {
   hero: { x: 0, y: 0, z: 10, rotY: 0, targetY: -0.38 },
   screen: { x: 2.3, y: 0.5, z: 4.8, rotY: -0.38, targetY: -0.38 },
-  arena: { x: -2.5, y: 0.2, z: 12, rotY: 0.1, targetY: -0.1 },
+  overview: { x: 0, y: 0.5, z: 13, rotY: 0, targetY: -0.2 },
   scores: { x: 3.8, y: -0.5, z: 5.6, rotY: -0.6, targetY: -0.6 }
 };
 
@@ -1017,11 +984,6 @@ window.addEventListener('pointerdown', (e) => {
       return;
     }
 
-    if (hitObj.userData.id === 'character') {
-      spawnSparks(intersects[0].point, hitObj.userData.color);
-      synth.playHit();
-      addScore(300);
-    }
   }
 });
 
@@ -1060,25 +1022,6 @@ function animate(time) {
   if (time - lastCombatTime > 1000 / 24) {
     lastCombatTime = time;
 
-    characters.forEach((char, i) => {
-      if (!char.target || Math.random() < 0.04) {
-        char.target = characters[(i + 1) % characters.length].mesh.position;
-      }
-
-      const dir = new THREE.Vector3().subVectors(char.target, char.mesh.position).normalize();
-      char.velocity.add(dir.multiplyScalar(0.015));
-      char.velocity.multiplyScalar(0.92);
-      char.mesh.position.add(char.velocity);
-
-      if (Math.abs(char.mesh.position.x) > 8) char.velocity.x *= -1;
-      if (Math.abs(char.mesh.position.y) > 4) char.velocity.y *= -1;
-
-      // Proximity sparring reaction without laser projectiles
-      const dist = char.mesh.position.distanceTo(char.target);
-      if (dist < 1.2 && Math.random() < 0.05) {
-        spawnSparks(char.mesh.position, char.config.color);
-      }
-    });
 
     for (let i = sparks.length - 1; i >= 0; i--) {
       const s = sparks[i];
